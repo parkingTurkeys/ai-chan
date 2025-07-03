@@ -1,6 +1,9 @@
 {
   "display_information": {
-    "name": "Getting Started Bolt App"
+    "name": "AI-chan",
+    "description": "hi3 reference",
+        "background_color": "#918300",
+        "long_description": "it's an hi3 reference ok?\r\n\r\nhehehehehehehe\r\n\r\ncan do many very smart things\r\n\r\n:333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
   },
   "features": {
     "app_home": {
@@ -9,7 +12,7 @@
       "messages_tab_read_only_enabled": false
     },
     "bot_user": {
-      "display_name": "BoltApp",
+      "display_name": "AI-chan",
       "always_online": true
     }
   },
@@ -20,7 +23,7 @@
   },
   "settings": {
     "event_subscriptions": {
-      "bot_events": ["message.channels", "message.im"]
+      "bot_events": ["message.channels", "message.im", "message.mpim", "message.groups"]
     },
     "interactivity": {
       "is_enabled": true
