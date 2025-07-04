@@ -1,6 +1,7 @@
 const { App } = require('@slack/bolt');
 const devChannelId = "C094628GGR4"
 const devDmId = "D0909H55R2N"
+const devUid = "U08N10Z3GSG"
 let name = "AI-chan"
 let pfp = ":ai-chan:"
 
@@ -97,7 +98,14 @@ app.message('paimon', async ({message, say}) => {
 
 });
 
-
+app.message('suggest', async ({message, say}) => {
+  await DmToDev(`user <@${message.user}> [${message.user}] sent \`${message.text}\` `)
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `<@${devUid}> has received your message!`
+  })
+})
 
 app.message('annoy', async ({message, say}) => {
 
