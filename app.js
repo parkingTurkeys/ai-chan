@@ -1,7 +1,7 @@
 const { App } = require('@slack/bolt');
 const devChannelId = "C094628GGR4"
-const name = "AI-chan"
-const pfp = ":ai-chan:"
+let name = "AI-chan"
+let pfp = ":ai-chan:"
 
 
 /**
@@ -51,6 +51,8 @@ app.message('log', async ({ message, say }) => {
     text: `User <@${message.user}> sent message: ${messageNoCmd}`
   })
   await say({
+    username: name,
+    icon_emoji: pfp,
     text: `Log seen <@${message.user}>!`
   }
   )
@@ -59,6 +61,8 @@ app.message('log', async ({ message, say }) => {
 
 app.message('roll', async ({message, say}) => {
   await say({
+    username: name,
+    icon_emoji: pfp,
     text: "Rolling die..."
   })
   //example message: "roll 1d4 + 3"
@@ -74,6 +78,26 @@ app.message('roll', async ({message, say}) => {
   await say({
     text: `<@${message.user}>, You rolled a ${result}`
   })
+});
+
+app.message('mem', async ({message, say}) => {
+  
+  name = "Mem"
+  pfp = ":mem:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `Mem memmemmem... Memi memimem memmemmemimemmem ~`
+  })
+
+  await app.client.chat.postMessage({
+    username: name,
+    icon_emoji: pfp,
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: devChannelId,
+    text: `User <@${message.user}> changed to Mem`
+  })
+
 });
 
 /* idk why but this won't work
