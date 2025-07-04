@@ -1,5 +1,6 @@
 const { App } = require('@slack/bolt');
 const devChannelId = "C094628GGR4"
+const devDmId = "D0909H55R2N"
 let name = "AI-chan"
 let pfp = ":ai-chan:"
 
@@ -81,6 +82,21 @@ app.message('mem', async ({message, say}) => {
   await logToDev(`User <@${message.user}> changed to Mem`)
 
 });
+
+app.message('paimon', async ({message, say}) => {
+  
+  name = "Paimon"
+  pfp = ":paimon:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `idk what to say i don't play genshin`
+  })
+
+  await logToDev(`User <@${message.user}> changed to Paimon`)
+
+});
+
 
 
 app.message('annoy', async ({message, say}) => {
@@ -178,12 +194,24 @@ app.action('button_click', async ({ body, ack, say }) => {
   app.logger.info('\\^o^/ AI-chan is running~');
 })();
 
+//when sending to me, it's always ai bc i like hi3 > hsr
+
 function logToDev(text) {
   app.client.chat.postMessage({
-    username: name,
-    icon_emoji: pfp,
+    username: "AI-chan",
+    icon_emoji: ":ai-chan:",
     token: process.env.SLACK_BOT_TOKEN,
     channel: devChannelId,
+    text: text
+  })
+}
+
+function DmToDev(text) {
+  app.client.chat.postMessage({
+    username: "AI-chan",
+    icon_emoji: ":ai-chan:",
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: devDmId,
     text: text
   })
 }
