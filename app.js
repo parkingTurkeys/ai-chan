@@ -43,13 +43,7 @@ blocks: [
 app.message('log', async ({ message, say }) => {
   
   messageNoCmd = message.text.slice(4)
-  await app.client.chat.postMessage({
-    username: name,
-    icon_emoji: pfp,
-    token: process.env.SLACK_BOT_TOKEN,
-    channel: devChannelId,
-    text: `User <@${message.user}> sent message: ${messageNoCmd}`
-  })
+  await logToDev(`User <@${message.user}> sent message: ${messageNoCmd}`)
   await say({
     username: name,
     icon_emoji: pfp,
@@ -68,13 +62,7 @@ app.message('roll', async ({message, say}) => {
   //example message: "roll 1d4 + 3"
   messageNoCmd = message.text.slice(5)
   result = rollDie(messageNoCmd)
-  await app.client.chat.postMessage({
-    username: name,
-    icon_emoji: pfp,
-    token: process.env.SLACK_BOT_TOKEN,
-    channel: devChannelId,
-    text: `User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`
-  })
+  await logToDev(`User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`)
   await say({
     text: `<@${message.user}>, You rolled a ${result}`
   })
@@ -90,14 +78,35 @@ app.message('mem', async ({message, say}) => {
     text: `Mem memmemmem... Memi memimem memmemmemimemmem ~`
   })
 
-  await app.client.chat.postMessage({
-    username: name,
-    icon_emoji: pfp,
-    token: process.env.SLACK_BOT_TOKEN,
-    channel: devChannelId,
-    text: `User <@${message.user}> changed to Mem`
-  })
+  await logToDev(`User <@${message.user}> changed to Mem`)
 
+});
+
+
+app.message('annoy', async ({message, say}) => {
+
+  messageNoCmd = message.text.slice(6)
+  annoyedUID = messageNoCmd.slice(2,13)
+  await say({
+    text: `You annoyed <@${annoyedUID}>!`
+  })
+  try {
+    annoyedDM =  app.client.conversations.open({
+      token: process.env.SLACK_BOT_TOKEN,
+      users: annoyedUID
+    })
+    app.client.chat.postMessage({
+      username: name,
+      icon_emoji: pfp,
+      token: process.env.SLACK_BOT_TOKEN,
+      channel: annoyedUID,
+      text: `<@${annoyedUID}>, somebody tried to annoy you!`
+    })
+    logToDev(`<@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
+} catch (error) {
+    logToDev(`${error} was logged while <@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
+  }
+  
 });
 
 /* idk why but this won't work
@@ -168,6 +177,16 @@ app.action('button_click', async ({ body, ack, say }) => {
 
   app.logger.info('\\^o^/ AI-chan is running~');
 })();
+
+function logToDev(text) {
+  app.client.chat.postMessage({
+    username: name,
+    icon_emoji: pfp,
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: devChannelId,
+    text: text
+  })
+}
 
 
 function rollDie(die) {
