@@ -42,13 +42,13 @@ blocks: [
 // Listens to incoming messages that contain "log"
 app.message('log', async ({ message, say }) => {
   
-  messageNoLog = message.text.slice(4)
+  messageNoCmd = message.text.slice(4)
   await app.client.chat.postMessage({
     username: name,
     icon_emoji: pfp,
     token: process.env.SLACK_BOT_TOKEN,
     channel: devChannelId,
-    text: `User <@${message.user}> sent message: ${messageNoLog}`
+    text: `User <@${message.user}> sent message: ${messageNoCmd}`
   })
   await say({
     text: `Log seen <@${message.user}>!`
@@ -56,6 +56,27 @@ app.message('log', async ({ message, say }) => {
   )
   ;
 });
+
+app.message('roll', async ({message, say}) => {
+  await say({
+    text: "Rolling die..."
+  })
+  //example message: "roll 1d4 + 3"
+  messageNoCmd = message.text.slice(5)
+  result = rollDie(messageNoCmd)
+  await app.client.chat.postMessage({
+    username: name,
+    icon_emoji: pfp,
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: devChannelId,
+    text: `User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`
+  })
+  await say({
+    text: `<@${message.user}>, You rolled a ${result}`
+  })
+});
+
+/* idk why but this won't work
 
 app.client.views.publish({
   "user_id": "U08N10Z3GSG",
@@ -107,6 +128,7 @@ app.client.views.publish({
     ]
 }})
 
+*/
 /*
 app.action('button_click', async ({ body, ack, say }) => {
   // Acknowledge the action
@@ -120,5 +142,39 @@ app.action('button_click', async ({ body, ack, say }) => {
   // Start your app
   await app.start(process.env.PORT || 3000);
 
-  app.logger.info('\^o^/ AI-chan is running~');
+  app.logger.info('\\^o^/ AI-chan is running~');
 })();
+
+
+function rollDie(die) {
+  //example: "2d5 + 4"
+  die = die.replaceAll(" ", "")
+  //example: "2d5+4"
+  numberThings = die.split("+")
+  numberThingsInts = []
+  
+  for (i = 0; i < numberThings.length; i++) {
+    if (numberThings[i].includes("d")) {
+      //numberThings[i] = ((numberThings[i].split("d")[1] + 1)/ 2) * numberThings[i].split("d")[0] | i'm an idiot this is the average
+      number = 0
+      for (n = 0; n < parseInt(numberThings[i].split("d")[0]); n++) {
+        number += rand(numberThings[i].split("d")[1]) + 1 
+      }
+      numberThings[i] = number
+    }
+  }
+  result = 0
+  for (i = 0; i < numberThings.length; i++) {
+    result += numberThings[i]
+  }
+  return result
+}
+
+
+//stuff copied from other stuff i made
+
+function rand(max, min = 0) {
+  max = parseInt(max)
+    //max will never be returned (i should have noticed this)
+    return Math.floor(Math.random() * (max - min) + min)
+}
