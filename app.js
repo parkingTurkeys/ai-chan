@@ -1,4 +1,5 @@
 const { App } = require('@slack/bolt');
+const process = require('node:process');
 const devChannelId = "C094628GGR4"
 const devDmId = "D0909H55R2N"
 const devUid = "U08N10Z3GSG"
@@ -45,7 +46,7 @@ blocks: [
 app.message('log', async ({ message, say }) => {
   
   messageNoCmd = message.text.slice(4)
-  await logToDev(`User <@${message.user}> sent message: ${messageNoCmd}`)
+  log(`User <@${message.user}> sent message: ${messageNoCmd}`)
   await say({
     username: name,
     icon_emoji: pfp,
@@ -64,7 +65,7 @@ app.message('roll', async ({message, say}) => {
   //example message: "roll 1d4 + 3"
   messageNoCmd = message.text.slice(5)
   result = rollDie(messageNoCmd)
-  await logToDev(`User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`)
+  log(`User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`)
   await say({
     text: `<@${message.user}>, You rolled a ${result}`
   })
@@ -94,7 +95,7 @@ app.message('paimon', async ({message, say}) => {
     text: `idk what to say i don't play genshin`
   })
 
-  await logToDev(`User <@${message.user}> changed to Paimon`)
+  log(`User <@${message.user}> changed to Paimon`)
 
 });
 
@@ -126,12 +127,21 @@ app.message('annoy', async ({message, say}) => {
       channel: annoyedUID,
       text: `<@${annoyedUID}>, somebody tried to annoy you!`
     })
-    logToDev(`<@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
+    log(`<@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
 } catch (error) {
-    logToDev(`${error} was logged while <@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
+    log(`${error} was logged while <@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
   }
   
 });
+
+app.message('', async ({message, say}) => {
+  profile = app.client.users.profile.get({
+    token: process.env.SLACK_BOT_TOKEN,
+    user: message.user
+  })
+  log(message.text + " - <@" + message.user + ">");
+
+} );
 
 /* idk why but this won't work
 
@@ -198,20 +208,46 @@ app.action('button_click', async ({ body, ack, say }) => {
 (async () => {
   // Start your app
   await app.start(process.env.PORT || 3000);
-
-  app.logger.info('\\^o^/ AI-chan is running~');
+  date = new Date()
+  log(`\\^o^/ AI-chan is running~`)
 })();
+
+process.on('exit', (code) => {
+  log(`(っ °Д °;)っ AI-chan stopped (;´༎ຶД༎ຶ\`)`)
+})
+
+// https://stackoverflow.com/a/51454798
+process.on
+(
+    'uncaughtException',
+    function (err)
+    {
+        
+        log(`${err}`)
+    }
+);
 
 //when sending to me, it's always ai bc i like hi3 > hsr
 
 function logToDev(text) {
+  date = new Date()
   app.client.chat.postMessage({
     username: "AI-chan",
     icon_emoji: ":ai-chan:",
     token: process.env.SLACK_BOT_TOKEN,
     channel: devChannelId,
-    text: text
+    text: `\`${date.getHours().toString()}:${date.getMinutes().toString()}:${date.getSeconds().toString()} -- ${text}\``
   })
+}
+
+function logToTerminal(text) {
+  date = new Date()
+  console.log(`${date.getHours().toString()}:${date.getMinutes().toString()}:${date.getSeconds().toString()} -- ${text}`)
+}
+
+function log(text) {
+  logToTerminal(text)
+  logToDev(text)
 }
 
 function DmToDev(text) {
