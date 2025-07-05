@@ -5,6 +5,9 @@ const devDmId = "D0909H55R2N"
 const devUid = "U08N10Z3GSG"
 let name = "AI-chan"
 let pfp = ":ai-chan:"
+const admins = [
+  "U08N10Z3GSG"
+]
 
 
 /**
@@ -113,6 +116,8 @@ app.message('annoy', async ({message, say}) => {
   messageNoCmd = message.text.slice(6)
   annoyedUID = messageNoCmd.slice(2,13)
   await say({
+    username: name,
+    icon_emoji: pfp,
     text: `You annoyed <@${annoyedUID}>!`
   })
   try {
@@ -142,6 +147,21 @@ app.message('', async ({message, say}) => {
   log(message.text + " - <@" + message.user + ">");
 
 } );
+
+/* i'll try this later[tm]
+app.message('nuke', async ({message, say}) => {
+  if (admins.includes(message.user)) {
+    threadUrl = message.text.split(" ")[1]
+  } else {
+    await say({
+      username: name,
+      icon_emoji: pfp,
+      text: "You aren't allowed to do that!"
+    })
+    log(`<@${message.user} tried to delete a thread!!!! that's not allowed :(`)
+  }
+})
+  */
 
 /* idk why but this won't work
 
