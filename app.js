@@ -224,6 +224,83 @@ app.action('button_click', async ({ body, ack, say }) => {
 });
 */
 
+//poll #channel question_with_multiple_words option option option_with_multiple_words
+/*
+{
+	"blocks": [
+		{ "type": "section", "text": {"type": "plain_text", "text": "Poll Question", "emoji": true } }, # done
+		{"type": "section","text": {"type": "mrkdwn","text": "Poll Options"}, # done
+    "accessory": {"type": "checkboxes","options": [
+    {"text": {"type": "mrkdwn", "text": "*this is mrkdwn text*" }, "description": { "type": "mrkdwn", "text": "*this is mrkdwn text*"},"value": "value-0" },
+					{
+						"text": {
+							"type": "mrkdwn",
+							"text": "*this is mrkdwn text*"
+						},
+						"description": {
+							"type": "mrkdwn",
+							"text": "*this is mrkdwn text*"
+						},
+						"value": "value-1"
+					},
+					{
+						"text": {
+							"type": "mrkdwn",
+							"text": "*this is mrkdwn text*"
+						},
+						"description": {
+							"type": "mrkdwn",
+							"text": "*this is mrkdwn text*"
+						},
+						"value": "value-2"
+					}
+				],
+				"action_id": "checkboxes-action"
+			}
+		}
+	]
+}
+*/
+
+
+app.message('poll', async ({message, say}) => {
+  pollArray = message.text.split(" ")
+  //pollArray: 0 = "poll", 1 = <#channelid>, 2 = question, 3..length = option[_with_multiple_words]
+  channelId = pollArray[1].splice(2, pollArray[1].length - 1)
+  question = pollArray[2].replaceAll("_", " ")
+  options = pollArray.splice(3)
+  for (i = 0; i < options.length; i++) {
+    options[i] = options[i].replaceAll("_", " ")
+  }
+  blocks = `{ "type": "section", "text": {"type": "mrkdwn", "text": "${question}", "emoji": true } },		{"type": "section","text": {"type": "mrkdwn","text": "Poll Options"},`
+  blocks += `"accessory": {"type": "checkboxes","options": [` 
+  for (i = 0; i < options.length; i++) {
+    blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "${pollArray[i + 3]}" },`
+  }
+
+  blocks += `],
+				"action_id": "checkboxes-action"
+			}
+		}
+	]
+}`
+  app.client.postMessage({
+    username: name,
+    icon_emoji: pfp,
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: channelId,
+    text: `poll with question ${question}`,
+    blocks: `[${blocks}]` //this is definitely wrong hahahahahahahaha
+  })
+  /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
+    username: "AI-chan",
+    icon_emoji: ":ai-chan:",
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: "C094K8W7DU4",
+    text: `` //add poll message id here
+  }) */
+})
+
 
 (async () => {
   // Start your app
