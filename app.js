@@ -226,6 +226,7 @@ app.action('button_click', async ({ body, ack, say }) => {
 
 //poll #channel question_with_multiple_words option option option_with_multiple_words
 /*
+blocks[3].options  where value == clicked .text > .split("| ") change the second one +1 or -1
 {
 	"blocks": [
 		{ "type": "section", "text": {"type": "plain_text", "text": "Poll Question", "emoji": true } }, # done
@@ -282,7 +283,7 @@ app.message('poll', async ({message, say}) => {
   }
   blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "value_${i}" }`
   blocks += `],
-				"action_id": "checkboxes-action"
+				"action_id": "poll-checked"
 			}
 
 }]`
@@ -304,6 +305,8 @@ app.message('poll', async ({message, say}) => {
     text: `` //add poll message id here
   }) */
 });
+
+
 
 
 (async () => {
@@ -386,6 +389,27 @@ function rollDie(die) {
   return result
 }
 
+app.action('poll-checked', async ({ body, ack }) => {
+  await ack();
+  clicked = body.actions.value
+  blocks = body.message.blocks
+  options = blocks[2].options
+  for (n = 0; n < options.length; n++) {
+    if (options[n].value == clicked) {
+      break;
+    }
+  }
+  textToChange = blocks[2].options[n].text.text
+  textToChangeArray = textToChange.split("| ")
+  log(blocks)
+  app.client.chat.update({
+    token: process.env.SLACK_BOT_TOKEN,
+    ts: body.message.ts,
+    channel: body.channel.id,
+    blocks: blocks //edit these blocks!
+  })
+  log(body.toString())
+});
 
 //stuff copied from other stuff i made
 
