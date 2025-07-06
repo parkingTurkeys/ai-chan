@@ -265,32 +265,36 @@ app.action('button_click', async ({ body, ack, say }) => {
 
 app.message('poll', async ({message, say}) => {
   pollArray = message.text.split(" ")
-  //pollArray: 0 = "poll", 1 = <#channelid>, 2 = question, 3..length = option[_with_multiple_words]
-  channelId = pollArray[1].splice(2, pollArray[1].length - 1)
+  //pollArray: 0 = "poll", 1 = <#channelid|>, 2 = question, 3..length = option[_with_multiple_words]
+  regexy = new RegExp("[<#>]", "g")
+  channelId = pollArray[1].replaceAll(regexy, "")
+  channelId = channelId.split("|")[0]
   question = pollArray[2].replaceAll("_", " ")
   options = pollArray.splice(3)
   for (i = 0; i < options.length; i++) {
     options[i] = options[i].replaceAll("_", " ")
   }
-  blocks = `{ "type": "section", "text": {"type": "mrkdwn", "text": "${question}", "emoji": true } },		{"type": "section","text": {"type": "mrkdwn","text": "Poll Options"},`
+  blocks = `[{ "type": "section", "text": {"type": "mrkdwn", "text": "${question}"} },		{"type": "section","text": {"type": "mrkdwn","text": "Poll Options"},`
   blocks += `"accessory": {"type": "checkboxes","options": [` 
-  for (i = 0; i < options.length; i++) {
-    blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "${pollArray[i + 3]}" },`
+  for (i = 0; i < options.length - 1;) {
+    blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "value_${i}" },`
+    i++
   }
-
+  blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "value_${i}" }`
   blocks += `],
 				"action_id": "checkboxes-action"
 			}
-		}
-	]
-}`
-  app.client.postMessage({
+
+}]`
+  log(blocks)
+  blocks = JSON.parse(blocks)
+  app.client.chat.postMessage({
     username: name,
     icon_emoji: pfp,
     token: process.env.SLACK_BOT_TOKEN,
     channel: channelId,
     text: `poll with question ${question}`,
-    blocks: `[${blocks}]` //this is definitely wrong hahahahahahahaha
+    blocks: blocks //this is definitely wrong hahahahahahahaha
   })
   /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
     username: "AI-chan",
@@ -299,7 +303,7 @@ app.message('poll', async ({message, say}) => {
     channel: "C094K8W7DU4",
     text: `` //add poll message id here
   }) */
-})
+});
 
 
 (async () => {
