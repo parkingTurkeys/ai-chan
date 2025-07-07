@@ -47,6 +47,25 @@ blocks: [
 
 */
 
+
+app.message('yell', async ({message, say}) => {
+  say({text:"okidoki"})
+  //broadcast message
+  allUsers = app.client.users.list({token:process.env.SLACK_BOT_TOKEN}) //not working
+  log(allUsers)
+  for (i = 0; i < all.length; i++) {
+    uid = allUsers.members[i].id 
+    log(uid)
+    client.app.chat.postMessage({
+      username: name,
+      icon_emoji: pfp,
+      token: process.env.SLACK_BOT_TOKEN,
+      channel: uid,
+      text: `${message.text.slice(6)}`
+    })
+  }
+});
+
 // Listens to incoming messages that contain "log"
 app.message('log', async ({ message, say }) => {
   
@@ -340,7 +359,7 @@ app.message('poll', async ({message, say}) => {
     token: process.env.SLACK_BOT_TOKEN,
     channel: channelId,
     text: `poll with question ${question}`,
-    blocks: blocks //this is definitely wrong hahahahahahahaha
+    blocks: blocks 
   })
   /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
     username: "AI-chan",
@@ -350,6 +369,7 @@ app.message('poll', async ({message, say}) => {
     text: `` //add poll message id here
   }) */
 });
+
 
 
 
