@@ -1,5 +1,7 @@
 const { App } = require('@slack/bolt');
 const process = require('node:process');
+const fs = require('node:fs');
+let data = JSON.parse(fs.readFileSync('data.json'))
 const devChannelId = "C094628GGR4"
 const devDmId = "D0909H55R2N"
 const devUid = "U08N10Z3GSG"
@@ -263,6 +265,49 @@ blocks[3].options  where value == clicked .text > .split("| ") change the second
 }
 */
 
+app.message('update', async ({message, say}) => {
+  //update/key/value 
+  updateArray = message.text.split("/")
+  say({
+    text: `updating key ${updateArray[1]} to value ${updateArray[2]}`
+  })
+  data[message.user].hsr[updateArray[1]] = updateArray[2]
+  fs.writeFileSync('data.json', JSON.stringify(data), )
+});
+
+app.message('pull hsr', async ({message, say}) => {
+  //pull hsr *$times *$whichonewas5staror0ifnot $5050waslost?
+  //one pass costs 160 jade in hsr; half pity is 90, then id you lose your 50/50 you're guerranteed a win after another 90
+  pullArray = message.text.split(" ")
+  pullArray[2] = parseInt(pullArray[2])
+  pullArray[3] = parseInt(pullArray[3])
+  if (pullArray[3] == 0) {
+    //if did not get 5 star
+    data[message.user].hsr.pity = parseInt(data[message.user].hsr.pity) + parseInt(pullArray[2])
+    
+
+  } else {
+    //if get 5 star
+    pity = pullArray[3]
+    if (pullArray[4]) {
+      data[message.user].hsr.lost50_50 = true
+    } else {
+      data[message.user].hsr.lost50_50 = false
+    }
+  }
+  if (tickets >= pullArray[2]) {
+      //if tickets were used
+      data[message.user].hsr.tickets = parseInt(data[message.user].hsr.tickets) - parseInt(pullArray[2])
+    } else {
+      //if [tickets and] jade [was|were] used
+      jadeUsed = pullArray[2] - parseInt(data[message.user].hsr.tickets)
+      data[message.user].hsr.tickets = 0
+      data[message.user].hsr.jade = parseInt(data[message.user].hsr.jade) - jadeUsed*160
+    }
+  fs.writeFileSync('data.json', JSON.stringify(data), )
+});
+
+
 
 app.message('poll', async ({message, say}) => {
   pollArray = message.text.split(" ")
@@ -316,7 +361,7 @@ app.message('poll', async ({message, say}) => {
   log(`\\^o^/ AI-chan is running~`)
 })();
 
-process.on('exit', (code) => {
+process.on('SIGINT', (code) => {
   log(`(っ °Д °;)っ AI-chan stopped (;´༎ຶД༎ຶ\`)`)
 })
 
@@ -417,4 +462,9 @@ function rand(max, min = 0) {
   max = parseInt(max)
     //max will never be returned (i should have noticed this)
     return Math.floor(Math.random() * (max - min) + min)
+}
+
+//IT'S TIME TO GO INSANE WITH GACHA GAMES !!!
+function calculatePulls(data /*tickets, jade, starlight, ~~embers, usedEmbers,~~ [who cares abt embers] pity, lost50_50, chara|lcs, ~~rateUp~~ [global] */ ) {
+
 }
