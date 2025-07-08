@@ -5,6 +5,7 @@ let data = JSON.parse(fs.readFileSync('data.json'))
 const devChannelId = "C094628GGR4"
 const devDmId = "D0909H55R2N"
 const devUid = "U08N10Z3GSG"
+const spamId = "C094FCQM1KP"
 let name = "AI-chan"
 let pfp = ":ai-chan:"
 const admins = [
@@ -51,7 +52,7 @@ blocks: [
 app.message('yell', async ({message, say}) => {
   say({text:"okidoki"})
   //broadcast message
-  allUsers = app.client.users.list({token:process.env.SLACK_BOT_TOKEN}) //not working
+  allUsers = app.client.users.list({token:process.env.SLACK_BOT_TOKEN}) //not working i am bad at this lmao
   log(allUsers)
   for (i = 0; i < all.length; i++) {
     uid = allUsers.members[i].id 
@@ -326,6 +327,21 @@ app.message('pull hsr', async ({message, say}) => {
   fs.writeFileSync('data.json', JSON.stringify(data), )
 });
 
+app.message('pulls left hsr', async ({message, say}) => {
+  uid = message.user
+  temp_data = data[message.user].hsr
+  jades = parseInt(temp_data.jade)
+  starlights = parseInt(temp_data.starlight)
+  ticketss = parseInt(temp_data.tickets)
+  pityy = parseInt(temp_data.pity)
+  pulls_left = Math.floor(jades/160) + Math.floor(starlights/20) + Math.floor(ticketss)
+  pity_plus_pulls = Math.floor(jades/160) + Math.floor(starlights/20) + Math.floor(ticketss) + Math.floor(pityy)
+  say({
+    username: name,
+    icon_emoji: pfp,
+    text: `You have ${pulls_left} pulls if you use all of your resources! This would give you ${pity_plus_pulls} pity ~`
+  })
+})
 
 
 app.message('poll', async ({message, say}) => {
