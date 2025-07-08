@@ -67,6 +67,48 @@ app.message('yell', async ({message, say}) => {
   }
 });
 
+app.message('yap', async ({message, say}) => {
+  //yap§<#CHANNELID|>§Text with spaces, and special characters!/[<@USERTOIMPERSONATE>]
+  if (message.user == devUid) {
+    temp_array = message.text.split("§")
+    temp_array[1] = temp_array[1].split("|")
+    chan_id = temp_array[1][0].slice(2)
+    if (temp_array.length == 4) {
+      //if impersonating somebody
+      temp_array[3] = temp_array[3].split("|")
+      victim_id = temp_array[3][0].slice(2)
+      user_profile = await app.client.users.info({
+        token: process.env.SLACK_BOT_TOKEN,
+        user: victim_id
+      })
+      user_profile = user_profile.user
+
+      client.app.chat.postMessage({
+        username: user_profile.display_name,
+        icon_emoji: user_profile.profile.image_48,
+        token: process.env.SLACK_BOT_TOKEN,
+        channel: chan_id,
+        text: `${temp_array[2]}`
+      })
+    } else {
+    client.app.chat.postMessage({
+      username: name,
+      icon_emoji: pfp,
+      token: process.env.SLACK_BOT_TOKEN,
+      channel: chan_id,
+      text: `${temp_array[2]}`
+    })
+    say({
+      text: "ok"
+    })
+    }
+  } else {
+    say({
+      text: "You aren't allowed to do this!"
+    })
+  }
+})
+
 // Listens to incoming messages that contain "log"
 app.message('log', async ({ message, say }) => {
   
