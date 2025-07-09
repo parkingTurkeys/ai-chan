@@ -70,20 +70,23 @@ app.message('yell', async ({message, say}) => {
 app.message('yap', async ({message, say}) => {
   //yap§<#CHANNELID|>§Text with spaces, and special characters!/[<@USERTOIMPERSONATE>]
   if (message.user == devUid) {
+    
     temp_array = message.text.split("§")
     temp_array[1] = temp_array[1].split("|")
     chan_id = temp_array[1][0].slice(2)
     if (temp_array.length == 4) {
       //if impersonating somebody
       temp_array[3] = temp_array[3].split("|")
-      victim_id = temp_array[3][0].slice(2)
+      regexy = new RegExp("[<@>]", "g")
+      victim_id = temp_array[3][0].replaceAll(regexy, "")
+      log(`user ${message.user} is sending a message as user <@${victim_id}> [${victim_id}]`)
+
       user_profile = await app.client.users.info({
         token: process.env.SLACK_BOT_TOKEN,
         user: victim_id
       })
       user_profile = user_profile.user
-
-      client.app.chat.postMessage({
+      app.client.chat.postMessage({
         username: user_profile.display_name,
         icon_emoji: user_profile.profile.image_48,
         token: process.env.SLACK_BOT_TOKEN,
@@ -91,7 +94,7 @@ app.message('yap', async ({message, say}) => {
         text: `${temp_array[2]}`
       })
     } else {
-    client.app.chat.postMessage({
+    app.client.chat.postMessage({
       username: name,
       icon_emoji: pfp,
       token: process.env.SLACK_BOT_TOKEN,
@@ -514,16 +517,19 @@ function rollDie(die) {
 
 app.action('poll-checked', async ({ body, ack }) => {
   await ack();
+  log(JSON.stringify(body))
   clicked = body.actions.value
   blocks = body.message.blocks
-  options = blocks[2].options
+  log(blocks)
+  options = blocks[1].options
   for (n = 0; n < options.length; n++) {
     if (options[n].value == clicked) {
       break;
     }
   }
-  textToChange = blocks[2].options[n].text.text
+  textToChange = blocks[1].options[n].text.text
   textToChangeArray = textToChange.split("| ")
+  textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
   log(blocks)
   app.client.chat.update({
     token: process.env.SLACK_BOT_TOKEN,
