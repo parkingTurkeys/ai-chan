@@ -401,7 +401,7 @@ app.message('poll', async ({message, say}) => {
     options[i] = options[i].replaceAll("_", " ")
   }
   blocks = `[{ "type": "section", "text": {"type": "mrkdwn", "text": "${question}"} },		{"type": "section","text": {"type": "mrkdwn","text": "Poll Options"},`
-  blocks += `"accessory": {"type": "checkboxes","options": [` 
+  blocks += `"accessory": {"type": "radio_buttons","options": [` 
   for (i = 0; i < options.length - 1;) {
     blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "value_${i}" },`
     i++
@@ -518,18 +518,28 @@ function rollDie(die) {
 app.action('poll-checked', async ({ body, ack }) => {
   await ack();
   log(JSON.stringify(body))
-  clicked = body.actions.value
+  clicked = body.actions[0].selected_option.value
   blocks = body.message.blocks
-  log(blocks)
-  options = blocks[1].options
+  options = blocks[1].accessory.options
   for (n = 0; n < options.length; n++) {
     if (options[n].value == clicked) {
       break;
     }
   }
-  textToChange = blocks[1].options[n].text.text
+  textToChange = options[n].text.text
   textToChangeArray = textToChange.split("| ")
   textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
+  blocks[1].accessory.options[n].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+  for (x = 0; x < options.length; x++) {
+    /*
+    if (x != n) {
+      textToChange = options[x].text.text
+      textToChangeArray = textToChange.split("| ")
+      textToChangeArray[1] = parseInt(textToChangeArray[1]) - 1
+      blocks[1].accessory.options[x].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+    }
+      */
+  }
   log(blocks)
   app.client.chat.update({
     token: process.env.SLACK_BOT_TOKEN,
