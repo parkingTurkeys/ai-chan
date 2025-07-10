@@ -14,6 +14,8 @@ const admins = [
 ]
 
 
+
+
 /**
  * This sample slack application uses SocketMode.
  * For the companion getting started setup guide, see:
@@ -26,7 +28,10 @@ const app = new App({
   socketMode: true,
   appToken: process.env.SLACK_APP_TOKEN
 });
-
+/*
+allUsers = await app.client.users.list({token:process.env.SLACK_BOT_TOKEN})
+fs.writeFileSync('user_data.json', JSON.stringify(allUsers), )
+*/
 /* 
 blocks: [
       {
@@ -49,27 +54,33 @@ blocks: [
 
 */
 
+app.message('get users', async ({}) => {
+  allUsers = await app.client.users.list({token:process.env.SLACK_BOT_TOKEN})
+  fs.writeFileSync('user_data.json', JSON.stringify(allUsers), )
+
+})
+
 
 app.message('yell', async ({message, say}) => {
   say({text:"okidoki"})
   //broadcast message
-  allUsers = app.client.users.list({token:process.env.SLACK_BOT_TOKEN}) //not working i am bad at this lmao
-  log(allUsers)
-  for (i = 0; i < all.length; i++) {
+  allUsers = JSON.parse(fs.readFileSync('user_data.json'))
+  log(allUsers.members.length)
+  for (i = 0; i < allUsers.members.length; i++) {
     uid = allUsers.members[i].id 
     log(uid)
-    client.app.chat.postMessage({
+    app.client.chat.postMessage({
       username: name,
       icon_emoji: pfp,
       token: process.env.SLACK_BOT_TOKEN,
       channel: uid,
-      text: `${message.text.slice(6)}`
+      text: `${message.text.slice(5)}`
     })
   }
 });
 
 app.message('yap', async ({message, say}) => {
-  //yap§<#CHANNELID|>§Text with spaces, and special characters!/[<@USERTOIMPERSONATE>]
+  //yap§<#CHANNELID|>§Text with spaces, and special characters!§[<@USERTOIMPERSONATE>]
   if (message.user == devUid) {
     
     temp_array = message.text.split("§")
