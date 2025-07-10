@@ -80,16 +80,17 @@ app.message('yell', async ({message, say}) => {
 });
 
 app.message('yap', async ({message, say}) => {
-  //yap§<#CHANNELID|>§Text with spaces, and special characters!§[<@USERTOIMPERSONATE>]
-  if (message.user == devUid) {
-    
+  //yap§<#CHANNELID|>§Text with spaces, and special characters!§ [<@USERTOIMPERSONATE>]
+  if (/*message.user == devUid*/ true) {
+    regexy = new RegExp("[<@# >]", "g")
     temp_array = message.text.split("§")
     temp_array[1] = temp_array[1].split("|")
-    chan_id = temp_array[1][0].slice(2)
+    chan_id = temp_array[1][0].replaceAll(regexy, "")
+    log(chan_id)
     if (temp_array.length == 4) {
       //if impersonating somebody
       temp_array[3] = temp_array[3].split("|")
-      regexy = new RegExp("[<@>]", "g")
+      
       victim_id = temp_array[3][0].replaceAll(regexy, "")
       log(`user ${message.user} is sending a message as user <@${victim_id}> [${victim_id}]`)
 
@@ -97,10 +98,11 @@ app.message('yap', async ({message, say}) => {
         token: process.env.SLACK_BOT_TOKEN,
         user: victim_id
       })
+      log(JSON.stringify(user_profile))
       user_profile = user_profile.user
       app.client.chat.postMessage({
-        username: user_profile.display_name,
-        icon_emoji: user_profile.profile.image_48,
+        username: user_profile.profile.display_name,
+        icon_url: user_profile.profile.image_48,
         token: process.env.SLACK_BOT_TOKEN,
         channel: chan_id,
         text: `${temp_array[2]}`
