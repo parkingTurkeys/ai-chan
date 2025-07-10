@@ -2,6 +2,7 @@ const { App } = require('@slack/bolt');
 const process = require('node:process');
 const fs = require('node:fs');
 let data = JSON.parse(fs.readFileSync('data.json'))
+let poll_data = JSON.parse(fs.readFileSync('poll_data.json'))
 const devChannelId = "C094628GGR4"
 const devDmId = "D0909H55R2N"
 const devUid = "U08N10Z3GSG"
@@ -517,7 +518,7 @@ function rollDie(die) {
 
 app.action('poll-checked', async ({ body, ack }) => {
   await ack();
-  log(JSON.stringify(body))
+  //log(JSON.stringify(body))
   clicked = body.actions[0].selected_option.value
   blocks = body.message.blocks
   options = blocks[1].accessory.options
@@ -526,28 +527,38 @@ app.action('poll-checked', async ({ body, ack }) => {
       break;
     }
   }
+  /*
   textToChange = options[n].text.text
   textToChangeArray = textToChange.split("| ")
   textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
   blocks[1].accessory.options[n].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+  */
+
+  poll_data[body.user.id][body.container.channel_id + body.container.message_ts] = n
+  fs.writeFileSync('poll_data.json', JSON.stringify(poll_data), )
   for (x = 0; x < options.length; x++) {
-    /*
-    if (x != n) {
+    //clear the poll
       textToChange = options[x].text.text
       textToChangeArray = textToChange.split("| ")
-      textToChangeArray[1] = parseInt(textToChangeArray[1]) - 1
+      textToChangeArray[1] = 0
       blocks[1].accessory.options[x].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
-    }
-      */
+    
   }
-  log(blocks)
+  for (x = 0; x < Object.keys(poll_data).length; x++) {
+    //get the persons poll data > get the poll > get which one is clicked > add 1
+    textToChange = options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text
+    textToChangeArray = textToChange.split("| ")
+    textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
+    blocks[1].accessory.options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+  }
+  //log(blocks)
   app.client.chat.update({
     token: process.env.SLACK_BOT_TOKEN,
     ts: body.message.ts,
     channel: body.channel.id,
     blocks: blocks //edit these blocks!
   })
-  log(body.toString())
+  //log(body.toString())
 });
 
 //stuff copied from other stuff i made
