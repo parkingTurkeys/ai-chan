@@ -84,6 +84,7 @@ app.message('yap', async ({message, say}) => {
   if (/*message.user == devUid*/ true) {
     regexy = new RegExp("[<@# >]", "g")
     temp_array = message.text.split("§")
+    temp_array[1] = temp_array[1].replaceAll(" ", "")
     temp_array[1] = temp_array[1].split("|")
     chan_id = temp_array[1][0].replaceAll(regexy, "")
     log(chan_id)
@@ -244,7 +245,7 @@ app.message('nuke', async ({message, say}) => {
 })
   */
 
-/* idk why but this won't work
+
 
 app.client.views.publish({
   "user_id": "U08N10Z3GSG",
@@ -290,13 +291,13 @@ app.client.views.publish({
               "value": "value-2"
             }
           ],
-          "action_id": "static_select-action"
+          "action_id": "switch_character"
         }
       }
     ]
 }})
 
-*/
+
 /*
 app.action('button_click', async ({ body, ack, say }) => {
   // Acknowledge the action
@@ -528,6 +529,10 @@ function rollDie(die) {
   }
   return result
 }
+app.action('switch_character', async ({ body, ack }) => {
+  await ack();
+  
+})
 
 app.action('poll-checked', async ({ body, ack }) => {
   await ack();
