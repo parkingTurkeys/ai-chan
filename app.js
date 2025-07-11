@@ -219,10 +219,24 @@ app.message('', async ({message, say}) => {
 
 } );
 
-/* i'll try this later[tm]
+
 app.message('nuke', async ({message, say}) => {
+  //nuke [url]
   if (admins.includes(message.user)) {
     threadUrl = message.text.split(" ")[1]
+    threadUrl = threadUrl.replace("https://", "")
+    threadUrlArray = threadUrl.split("/")
+    chan_id = threadUrlArray[2]
+    ts = threadUrlArray[3].replace("p","")
+    ts = ts.slice(0,10) + "." + ts.slice(10)
+    thread_to_nuke = await app.client.conversations.history({
+      //https://api.slack.com/messaging/retrieving#individual_messages
+      token: process.env.SLACK_BOT_TOKEN,
+      channel: chan_id,
+      latest: ts,
+      inclusive: true,
+      limit: 1
+    });
   } else {
     await say({
       username: name,
@@ -232,8 +246,6 @@ app.message('nuke', async ({message, say}) => {
     log(`<@${message.user} tried to delete a thread!!!! that's not allowed :(`)
   }
 })
-  */
-
 
 
 allUsers = JSON.parse(fs.readFileSync('user_data.json'))
