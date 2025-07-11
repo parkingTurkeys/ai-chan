@@ -13,7 +13,7 @@ const admins = [
   "U08N10Z3GSG"
 ]
 
-
+//message.user and body.user.id have the same length :partyparrot:
 
 
 /**
@@ -62,7 +62,10 @@ app.message('get users', async ({}) => {
 
 
 app.message('yell', async ({message, say}) => {
-  say({text:"okidoki"})
+  say({
+    username: name,
+    icon_emoji: pfp,
+    text:"okidoki"})
   //broadcast message
   allUsers = JSON.parse(fs.readFileSync('user_data.json'))
   log(allUsers.members.length)
@@ -117,11 +120,15 @@ app.message('yap', async ({message, say}) => {
       text: `${temp_array[2]}`
     })
     say({
-      text: "ok"
+      text: "ok",
+      username: name,
+    icon_emoji: pfp,
     })
     }
   } else {
     say({
+      username: name,
+      icon_emoji: pfp,
       text: "You aren't allowed to do this!"
     })
   }
@@ -152,37 +159,19 @@ app.message('roll', async ({message, say}) => {
   result = rollDie(messageNoCmd)
   log(`User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`)
   await say({
+    username: name,
+    icon_emoji: pfp,
     text: `<@${message.user}>, You rolled a ${result}`
   })
 });
 
-app.message('mem', async ({message, say}) => {
-  
-  name = "Mem"
-  pfp = ":mem:"
-  await say({
+app.message('hello', async ({say}) => {
+  say({
+    text: "hai!",
     username: name,
     icon_emoji: pfp,
-    text: `Mem memmemmem... Memi memimem memmemmemimemmem ~`
   })
-
-  await logToDev(`User <@${message.user}> changed to Mem`)
-
-});
-
-app.message('paimon', async ({message, say}) => {
-  
-  name = "Paimon"
-  pfp = ":paimon:"
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `idk what to say i don't play genshin`
-  })
-
-  log(`User <@${message.user}> changed to Paimon`)
-
-});
+})
 
 app.message('suggest', async ({message, say}) => {
   await DmToDev(`user <@${message.user}> [${message.user}] sent \`${message.text}\` `)
@@ -247,8 +236,12 @@ app.message('nuke', async ({message, say}) => {
 
 
 
+allUsers = JSON.parse(fs.readFileSync('user_data.json'))
+  for (i = 0; i < allUsers.members.length; i++) {
+    uid = allUsers.members[i].id 
+
 app.client.views.publish({
-  "user_id": "U08N10Z3GSG",
+  "user_id": uid,
   "view": {
     "type": "home",
     "blocks": [
@@ -296,7 +289,7 @@ app.client.views.publish({
       }
     ]
 }})
-
+  }
 
 /*
 app.action('button_click', async ({ body, ack, say }) => {
@@ -349,6 +342,8 @@ app.message('update', async ({message, say}) => {
   //update/key/value 
   updateArray = message.text.split("/")
   say({
+    username: name,
+    icon_emoji: pfp,
     text: `updating key ${updateArray[1]} to value ${updateArray[2]}`
   })
   data[message.user].hsr[updateArray[1]] = updateArray[2]
@@ -531,8 +526,64 @@ function rollDie(die) {
 }
 app.action('switch_character', async ({ body, ack }) => {
   await ack();
-  
+  log(JSON.stringify(body))
+  char = body.actions[0].selected_option.text.text
+  if (char == "*AI-chan*") {
+    name = "AI-chan"
+    pfp = ":ai-chan:"
+    log(`User <@${body.user.id}> changed to AI-chan`)
+  } else if (char == "*Paimon*") {
+    name = "Paimon"
+    pfp = ":paimon:"
+    log(`User <@${body.user.id}> changed to Paimon`)  
+  } else if (char == "*Mem*") {
+    name = "Mem"
+    pfp = ":mem:"
+    log(`User <@${body.user.id}> changed to Mem`)
+  }
 })
+
+app.message('mem', async ({message, say}) => {
+  
+  name = "Mem"
+  pfp = ":mem:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `Mem memmemmem... Memi memimem memmemmemimemmem ~`
+  })
+
+  log(`User <@${message.user}> changed to Mem`)
+
+});
+
+app.message('paimon', async ({message, say}) => {
+  
+  name = "Paimon"
+  pfp = ":paimon:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `idk what to say i don't play genshin`
+  })
+
+  log(`User <@${message.user}> changed to Paimon`)
+
+});
+
+app.message('ai-chan on', async ({message, say}) => {
+  
+  name = "AI-chan"
+  pfp = ":ai-chan:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `the correct mode`
+  })
+
+  log(`User <@${message.user}> changed to AI-chan`)
+
+});
 
 app.action('poll-checked', async ({ body, ack }) => {
   await ack();
