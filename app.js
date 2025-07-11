@@ -247,7 +247,7 @@ app.message('nuke', async ({message, say}) => {
   }
 })
 
-
+ 
 allUsers = JSON.parse(fs.readFileSync('user_data.json'))
   for (i = 0; i < allUsers.members.length; i++) {
     uid = allUsers.members[i].id 
