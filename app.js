@@ -243,53 +243,68 @@ allUsers = JSON.parse(fs.readFileSync('user_data.json'))
 app.client.views.publish({
   "user_id": uid,
   "view": {
-    "type": "home",
-    "blocks": [
-      {
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": "Pick an item from the dropdown list"
-        },
-        "accessory": {
-          "type": "static_select",
-          "placeholder": {
-            "type": "plain_text",
-            "text": "Select who you want to see!",
-            "emoji": true
-          },
-          "options": [
-            {
-              "text": {
-                "type": "plain_text",
-                "text": "*AI-chan*",
-                "emoji": true
-              },
-              "value": "value-0"
-            },
-            {
-              "text": {
-                "type": "plain_text",
-                "text": "*Mem*",
-                "emoji": true
-              },
-              "value": "value-1"
-            },
-            {
-              "text": {
-                "type": "plain_text",
-                "text": "*Paimon*",
-                "emoji": true
-              },
-              "value": "value-2"
-            }
-          ],
-          "action_id": "switch_character"
-        }
-      }
-    ]
-}})
-  }
+
+	"type": "home",
+	"blocks": [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "Pick an item from the dropdown list"
+			},
+			"accessory": {
+				"type": "static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Select who you want to see!",
+					"emoji": true
+				},
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "*AI-chan*",
+							"emoji": true
+						},
+						"value": "value-0"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "*Mem*",
+							"emoji": true
+						},
+						"value": "value-1"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "*Paimon*",
+							"emoji": true
+						},
+						"value": "value-2"
+					}
+				],
+				"action_id": "switch_character"
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": ":mem: Update HSR data",
+						"emoji": true
+					},
+					"value": "update_hsr_data",
+					"action_id": "update_hsr_data"
+				}
+			]
+		}
+	]
+}  })}
 
 /*
 app.action('button_click', async ({ body, ack, say }) => {
@@ -629,6 +644,155 @@ app.action('poll-checked', async ({ body, ack }) => {
   })
   //log(body.toString())
 });
+
+app.action('update_hsr_data', async ({ body, ack }) => {
+  
+  ack();
+  if (data[body.user.id].hsr.lost50_50 == true) {
+    fiftyfiftytext = "Yes";
+    value5050 = "true"
+  } else {
+    fiftyfiftytext = "Yes";
+    value5050 = "true"
+  }
+  //log("aaaaaaaaaa, modals suck [actually they're pretty cool]")
+  app.client.views.open({
+    trigger_id: body.trigger_id,
+    token: process.env.SLACK_BOT_TOKEN,
+    view: {
+      "type": "modal",
+      "title": {
+        "type": "plain_text",
+        "text": "Edit HSR Data",
+        "emoji": true
+      },
+      "submit": {
+        "type": "plain_text",
+        "text": "Submit",
+        "emoji": true
+      },
+      "close": {
+        "type": "plain_text",
+        "text": "Cancel",
+        "emoji": true
+      },
+      "blocks": [
+        {
+          "type": "input",
+          "element": {
+            "type": "number_input",
+            "is_decimal_allowed": false,
+            "action_id": "number_input-action"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Jade",
+            "emoji": true
+          },
+          "hint": {
+            "type": "plain_text",
+            "text": data[body.user.id].hsr.jade.toString(),
+            "emoji": true
+          }
+        },
+        {
+          "type": "input",
+          "element": {
+            "type": "number_input",
+            "is_decimal_allowed": false,
+            "action_id": "number_input-action"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Tickets",
+            "emoji": true
+          },
+          "hint": {
+            "type": "plain_text",
+            "text": data[body.user.id].hsr.tickets.toString(),
+            "emoji": true
+          }
+        },
+        {
+          "type": "input",
+          "element": {
+            "type": "number_input",
+            "is_decimal_allowed": false,
+            "action_id": "number_input-action"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Starlight",
+            "emoji": true
+          },
+          "hint": {
+            "type": "plain_text",
+            "text": data[body.user.id].hsr.starlight.toString(),
+            "emoji": true
+          }
+        },
+        {
+          "type": "input",
+          "element": {
+            "type": "number_input",
+            "is_decimal_allowed": false,
+            "action_id": "number_input-action"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Pity",
+            "emoji": true
+          },
+          "hint": {
+            "type": "plain_text",
+            "text": data[body.user.id].hsr.pity.toString(),
+            "emoji": true
+          }
+        },
+        
+        {
+          "type": "input",
+          "element": {
+            "type": "radio_buttons",
+            "initial_option": {
+                "text": {
+                  "type": "plain_text",
+                  "text": fiftyfiftytext,
+                  "emoji": true
+                },
+                "value": value5050
+              },
+            "options": [
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": "Yes",
+                  "emoji": true
+                },
+                "value": "true"
+              },
+              {
+                "text": {
+                  "type": "plain_text",
+                  "text": "No",
+                  "emoji": true
+                },
+                "value": "value-0"
+              }
+            ],
+            "action_id": "checkboxes-action"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Did you lose your last 50/50?",
+            "emoji": true
+          }
+        }
+      ]
+    }
+  })
+});
+
 
 //stuff copied from other stuff i made
 
