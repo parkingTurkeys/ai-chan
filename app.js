@@ -645,6 +645,11 @@ app.action('poll-checked', async ({ body, ack }) => {
   //log(body.toString())
 });
 
+app.action('view_submission', async ({body, ack}) => {
+  ack();
+  log(JSON.stringify(body))
+})
+
 app.action('update_hsr_data', async ({ body, ack }) => {
   
   ack();
@@ -656,10 +661,11 @@ app.action('update_hsr_data', async ({ body, ack }) => {
     value5050 = "true"
   }
   //log("aaaaaaaaaa, modals suck [actually they're pretty cool]")
-  app.client.views.open({
+  await app.client.views.open({
     trigger_id: body.trigger_id,
     token: process.env.SLACK_BOT_TOKEN,
     view: {
+      "external_id": "hsr_data_modal",
       "type": "modal",
       "title": {
         "type": "plain_text",
@@ -792,6 +798,8 @@ app.action('update_hsr_data', async ({ body, ack }) => {
     }
   })
 });
+
+//app.action('')
 
 
 //stuff copied from other stuff i made
