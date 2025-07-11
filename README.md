@@ -76,5 +76,38 @@ syntax: `annoy @[user]`
 example: `annoy @Slackbot`  
   
   
+### update
+  
+Update your HSR data
+  
+syntax: `update/[key]/[value]`
+example: `update/jade/1000000` [i wish :(]
+
+Options for keys: `jade, starlight, pity, tickets, lost50_50, chara.* [unused]`  
+Note: data may be assumed to be for limited character banners, but it should work for other stuff
+
+### pull hsr
+  
+Update hsr data easily
+  
+syntax: `pull hsr [amount of times] [which one was 5 star or 0 if you didn't get one] [[did you lose your 50/50 [optional]]]`
+example: `pull hsr 20 17 true` > you pull 20 times and get a 5 star on your 17th pull, but it isn't the featured one
+example: `pull hsr 80 0` > you pull 80 times and don't get a 5 star
+
+### pulls left hsr
+
+See how many pulls you have available; UPDATE YOUR DATA FIRST!!!!!!
+
+syntax: `pulls left hsr`
+example: `pulls left hsr`
+
+### poll
+
+Send a poll! Replace the spaces in the question and options with underscores [`_`]
+
+syntax: `poll #[channel] [question] [option_1]..[option_n]`
+example: `poll #lounge What_is_your_preferred_AI_mode? AI-chan_(the_correct_one) Paimon Mem`
+
+
   
 *or whoever she is set to
