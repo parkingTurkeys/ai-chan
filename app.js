@@ -209,7 +209,7 @@ app.message('annoy', async ({message, say}) => {
   }
   
 });
-
+/*
 app.message('', async ({message, say}) => {
   profile = app.client.users.profile.get({
     token: process.env.SLACK_BOT_TOKEN,
@@ -217,8 +217,7 @@ app.message('', async ({message, say}) => {
   })
   log(message.text + " - <@" + message.user + ">");
 
-} );
-
+} );*/
 
 app.message('nuke', async ({message, say}) => {
   //nuke [url]
@@ -229,6 +228,7 @@ app.message('nuke', async ({message, say}) => {
     chan_id = threadUrlArray[2]
     ts = threadUrlArray[3].replace("p","")
     ts = ts.slice(0,10) + "." + ts.slice(10)
+    /* i dont need this ig???
     thread_to_nuke = await app.client.conversations.history({
       //https://api.slack.com/messaging/retrieving#individual_messages
       token: process.env.SLACK_BOT_TOKEN,
@@ -237,6 +237,20 @@ app.message('nuke', async ({message, say}) => {
       inclusive: true,
       limit: 1
     });
+    */
+    thread_to_nuke = await app.client.conversations.replies({
+      token: process.env.SLACK_BOT_TOKEN,
+      ts: ts,
+      channel: chan_id
+    })
+    for (i = 0; i < thread_to_nuke.messages.length; i++) {
+      app.client.chat.delete({
+        token: process.env.SLACK_USER_TOKEN,
+        ts: thread_to_nuke.messages[i].ts,
+        channel: chan_id,
+        as_user: true
+      })
+    }
     
   } else {
     await say({
