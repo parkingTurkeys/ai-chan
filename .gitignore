@@ -4,3 +4,4 @@ package-lock.json
 tokens.ps1
 *.ps1
 *data.*
+.env*
