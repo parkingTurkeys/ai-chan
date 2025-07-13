@@ -237,6 +237,7 @@ app.message('nuke', async ({message, say}) => {
       inclusive: true,
       limit: 1
     });
+    
   } else {
     await say({
       username: name,
@@ -657,9 +658,20 @@ app.action('poll-checked', async ({ body, ack }) => {
   //log(body.toString())
 });
 
-app.action('view_submission', async ({body, ack}) => {
+app.view('hsr_data_modal', async ({body, ack}) => {
+    log(JSON.stringify(body))
   ack();
-  log(JSON.stringify(body))
+  //data[message.user].hsr[key] = value
+  data[body.user.id].hsr.jade = body.view.state.values.jade["number_input-action"].value
+  data[body.user.id].hsr.starlight = body.view.state.values.starlight["number_input-action"].value
+  data[body.user.id].hsr.tickets = body.view.state.values.tickets["number_input-action"].value
+  data[body.user.id].hsr.pity = body.view.state.values.pity["number_input-action"].value
+  if (body.view.state.values.coin_flip["checkboxes-action"].selected_option.value == "true") {
+    data[body.user.id].hsr.lost50_50 = true
+  } else {
+    data[body.user.id].hsr.lost50_50 = false
+  }
+  fs.writeFileSync('data.json', JSON.stringify(data), )
 })
 
 app.action('update_hsr_data', async ({ body, ack }) => {
@@ -673,10 +685,11 @@ app.action('update_hsr_data', async ({ body, ack }) => {
     value5050 = "true"
   }
   //log("aaaaaaaaaa, modals suck [actually they're pretty cool]")
-  await app.client.views.open({
+  result = await app.client.views.open({
     trigger_id: body.trigger_id,
     token: process.env.SLACK_BOT_TOKEN,
     view: {
+      "callback_id":"hsr_data_modal",
       "external_id": "hsr_data_modal",
       "type": "modal",
       "title": {
@@ -697,6 +710,7 @@ app.action('update_hsr_data', async ({ body, ack }) => {
       "blocks": [
         {
           "type": "input",
+          "block_id": "jade",
           "element": {
             "type": "number_input",
             "is_decimal_allowed": false,
@@ -715,6 +729,7 @@ app.action('update_hsr_data', async ({ body, ack }) => {
         },
         {
           "type": "input",
+          "block_id": "tickets",
           "element": {
             "type": "number_input",
             "is_decimal_allowed": false,
@@ -733,6 +748,7 @@ app.action('update_hsr_data', async ({ body, ack }) => {
         },
         {
           "type": "input",
+          "block_id": "starlight",
           "element": {
             "type": "number_input",
             "is_decimal_allowed": false,
@@ -751,6 +767,7 @@ app.action('update_hsr_data', async ({ body, ack }) => {
         },
         {
           "type": "input",
+          "block_id": "pity",
           "element": {
             "type": "number_input",
             "is_decimal_allowed": false,
@@ -770,6 +787,7 @@ app.action('update_hsr_data', async ({ body, ack }) => {
         
         {
           "type": "input",
+          "block_id": "coin_flip",
           "element": {
             "type": "radio_buttons",
             "initial_option": {
@@ -795,7 +813,7 @@ app.action('update_hsr_data', async ({ body, ack }) => {
                   "text": "No",
                   "emoji": true
                 },
-                "value": "value-0"
+                "value": "false"
               }
             ],
             "action_id": "checkboxes-action"
@@ -809,6 +827,7 @@ app.action('update_hsr_data', async ({ body, ack }) => {
       ]
     }
   })
+  log(JSON.stringify(result))
 });
 
 //app.action('')
