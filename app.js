@@ -1,12 +1,13 @@
 const { App } = require('@slack/bolt');
 const process = require('node:process');
+const https = require('node:https');
 const fs = require('node:fs');
 let data = JSON.parse(fs.readFileSync('data.json'))
 let poll_data = JSON.parse(fs.readFileSync('poll_data.json'))
-const devChannelId = "C094628GGR4"
-const devDmId = "D0909H55R2N"
-const devUid = "U08N10Z3GSG"
-const spamId = "C094FCQM1KP"
+const devChannelId = process.env.devChannelId
+const devDmId = process.env.devDmId
+const devUid = process.env.devUid
+const spamId = process.env.spamId
 let name = "AI-chan"
 let pfp = ":ai-chan:"
 const admins = [
@@ -329,6 +330,21 @@ app.client.views.publish({
 					"action_id": "update_hsr_data"
 				}
 			]
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Create a Poll!",
+						"emoji": true
+					},
+					"value": "make_poll",
+					"action_id": "make_poll"
+				}
+			]
 		}
 	]
 }  })}
@@ -442,7 +458,19 @@ app.message('pulls left hsr', async ({message, say}) => {
 
 
 app.message('poll', async ({message, say}) => {
+  poll(message)
+  /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
+    username: "AI-chan",
+    icon_emoji: ":ai-chan:",
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: "C094K8W7DU4",
+    text: `` //add poll message id here
+  }) */
+});
+
+function poll(message) {
   pollArray = message.text.split(" ")
+  //poll <#chan_id> question option option_with_multiple words...
   //pollArray: 0 = "poll", 1 = <#channelid|>, 2 = question, 3..length = option[_with_multiple_words]
   regexy = new RegExp("[<#>]", "g")
   channelId = pollArray[1].replaceAll(regexy, "")
@@ -474,15 +502,7 @@ app.message('poll', async ({message, say}) => {
     text: `poll with question ${question}`,
     blocks: blocks 
   })
-  /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
-    username: "AI-chan",
-    icon_emoji: ":ai-chan:",
-    token: process.env.SLACK_BOT_TOKEN,
-    channel: "C094K8W7DU4",
-    text: `` //add poll message id here
-  }) */
-});
-
+}
 
 
 
@@ -688,6 +708,19 @@ app.view('hsr_data_modal', async ({body, ack}) => {
   fs.writeFileSync('data.json', JSON.stringify(data), )
 })
 
+app.view('poll_modal', async ({body, ack}) => {
+  log(JSON.stringify(body))
+  //poll <#chan_id> question option option_with_multiple words...
+  var message = {text: ""}
+  message.text = `poll <#${body.view.state.values.chan.response.selected_conversation}> ${body.view.state.values.q.response.value.replaceAll(" ", "_")}`
+  var array = body.view.state.values.a.response.value.split("\\n")
+  for (var baguette = 0; baguette < array.length; baguette++) {
+    message.text += " " + array[baguette]
+  }
+  ack();
+  poll(message)
+})
+
 app.action('update_hsr_data', async ({ body, ack }) => {
   
   ack();
@@ -843,6 +876,92 @@ app.action('update_hsr_data', async ({ body, ack }) => {
   })
   log(JSON.stringify(result))
 });
+
+app.action('make_poll', async ({ body, ack }) => {
+  result = await app.client.views.open({
+    trigger_id: body.trigger_id,
+    token: process.env.SLACK_BOT_TOKEN,
+    view: {
+            "callback_id":"poll_modal",
+      "external_id": "poll_modal",
+
+	"type": "modal",
+	"title": {
+		"type": "plain_text",
+		"text": "Create Poll",
+		"emoji": true
+	},
+	"submit": {
+		"type": "plain_text",
+		"text": "Submit",
+		"emoji": true
+	},
+	"close": {
+		"type": "plain_text",
+		"text": "Cancel",
+		"emoji": true
+	},
+	"blocks": [
+		{
+      "block_id": "q",
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "response"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Question",
+				"emoji": true
+			}
+		},
+    {
+      "block_id": "chan",
+    "type": "input",
+    "label": {
+      "type": "plain_text",
+      "text": "Channel"
+    },
+    "element": {
+      "action_id": "response",
+      "type": "conversations_select",
+      "placeholder": {
+        "type": "plain_text",
+        "text": "Select a channel"
+      }
+    }
+  },
+		{
+      "block_id": "a",
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true,
+				"action_id": "response"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Options",
+				"emoji": true
+			}
+		}
+	]
+}
+  })
+})
+
+/* i'm giving up on this bc i don't feel like getting around the just a moment and cookies accepty thing
+function getAO3Data(url){
+  //hehehe
+  https.get(url, (res) => {
+    res.on('data', (d) => {
+    process.stdout.write(d);
+  });
+  })
+}
+
+getAO3Data(process.env.TEST_URL)
+*/
 
 //app.action('')
 
