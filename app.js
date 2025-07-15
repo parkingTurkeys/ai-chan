@@ -331,6 +331,21 @@ app.client.views.publish({
 				}
 			]
 		},
+    {
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Annoy somebody!",
+						"emoji": true
+					},
+					"value": "annoy_somebody",
+					"action_id": "annoy_somebody"
+				}
+			]
+		},
 		{
 			"type": "actions",
 			"elements": [
@@ -442,7 +457,7 @@ app.message('pull hsr', async ({message, say}) => {
 
 app.message('pulls left hsr', async ({message, say}) => {
   uid = message.user
-  temp_data = data[message.user].hsr
+  temp_data = data[uid].hsr
   jades = parseInt(temp_data.jade)
   starlights = parseInt(temp_data.starlight)
   ticketss = parseInt(temp_data.tickets)
@@ -502,8 +517,15 @@ function poll(message) {
     text: `poll with question ${question}`,
     blocks: blocks 
   })
-}
+};
 
+app.message('bye', async ({message, say}) => {
+  say({
+    username: name,
+    icon_emoji: pfp,
+    text: "o(*^▽^*)┛"
+  })
+});
 
 
 
@@ -719,7 +741,27 @@ app.view('poll_modal', async ({body, ack}) => {
   }
   ack();
   poll(message)
-})
+});
+
+app.view('annoy_modal', async ({body, ack}) => {
+  //log(JSON.stringify(body))
+  var uid = body.view.state.values.uid.uid.selected_user
+  //log(uid)
+  annoyedDM =  await app.client.conversations.open({
+      token: process.env.SLACK_BOT_TOKEN,
+      users: uid
+    })
+  //log(JSON.stringify(annoyedDM))
+  app.client.chat.postMessage({
+    username: name,
+    icon_emoji: pfp,
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: annoyedDM.channel.id,
+    text: `<@${uid}>, somebody tried to annoy you!`
+  })
+  //log(`<@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
+  ack();
+});
 
 app.action('update_hsr_data', async ({ body, ack }) => {
   
@@ -875,6 +917,53 @@ app.action('update_hsr_data', async ({ body, ack }) => {
     }
   })
   log(JSON.stringify(result))
+});
+
+app.action('annoy_somebody', async ({ body, ack }) => {
+  result = await app.client.views.open({
+    trigger_id: body.trigger_id,
+    token: process.env.SLACK_BOT_TOKEN,
+    view: {
+      "callback_id": "annoy_modal",
+      "external_id": "annoy_modal",
+      "type": "modal",
+      "title": {
+          "type": "plain_text",
+          "text": "Annoy Somebody",
+          "emoji": true
+        },
+      "submit": {
+        "type": "plain_text",
+        "text": "Submit",
+        "emoji": true
+      },
+      "close": {
+        "type": "plain_text",
+        "text": "Cancel",
+        "emoji": true
+      },
+      "blocks": [
+        {
+          "block_id": "uid",
+          "type": "input",
+          "element": {
+            "type": "users_select",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "Select users",
+              "emoji": true
+            },
+            "action_id": "uid"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Label",
+            "emoji": true
+          }
+        }
+      ]
+    }
+  })
 });
 
 app.action('make_poll', async ({ body, ack }) => {

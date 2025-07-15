@@ -108,6 +108,15 @@ Send a poll! Replace the spaces in the question and options with underscores [`_
 syntax: `poll #[channel] [question] [option_1]..[option_n]`
 example: `poll #lounge What_is_your_preferred_AI_mode? AI-chan_(the_correct_one) Paimon Mem`
 
+### hello
+  
+fairly self-explanatory
+
+### bye
+
+same as hello
+
+
 
   
 *or whoever she is set to
