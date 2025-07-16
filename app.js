@@ -55,12 +55,252 @@ blocks: [
 
 */
 
+//commands that are messaged to AI-chan
+
+app.message('ai-chan on', async ({message, say}) => {
+  
+  name = "AI-chan"
+  pfp = ":ai-chan:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `the correct mode`
+  })
+
+  log(`User <@${message.user}> changed to AI-chan`)
+
+});
+
+app.message('annoy', async ({message, say}) => {
+
+  messageNoCmd = message.text.slice(6)
+  annoyedUID = messageNoCmd.slice(2,13)
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `You annoyed <@${annoyedUID}>!`
+  })
+  try {
+    annoyedDM =  app.client.conversations.open({
+      token: process.env.SLACK_BOT_TOKEN,
+      users: annoyedUID
+    })
+    app.client.chat.postMessage({
+      username: name,
+      icon_emoji: pfp,
+      token: process.env.SLACK_BOT_TOKEN,
+      channel: annoyedUID,
+      text: `<@${annoyedUID}>, somebody tried to annoy you!`
+    })
+    log(`<@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
+} catch (error) {
+    log(`${error} was logged while <@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
+  }
+  
+});
+
+app.message('bye', async ({message, say}) => {
+  say({
+    username: name,
+    icon_emoji: pfp,
+    text: "o(*^▽^*)┛"
+  })
+});
+
 app.message('get users', async ({}) => {
   allUsers = await app.client.users.list({token:process.env.SLACK_BOT_TOKEN})
   fs.writeFileSync('user_data.json', JSON.stringify(allUsers), )
 
 })
 
+app.message('hello', async ({say}) => {
+  say({
+    text: "hai!",
+    username: name,
+    icon_emoji: pfp,
+  })
+})
+
+app.message('log', async ({ message, say }) => {
+  
+  messageNoCmd = message.text.slice(4)
+  log(`User <@${message.user}> sent message: ${messageNoCmd}`)
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `Log seen <@${message.user}>!`
+  }
+  )
+  ;
+});
+
+app.message('mem', async ({message, say}) => {
+  
+  name = "Mem"
+  pfp = ":mem:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `Mem memmemmem... Memi memimem memmemmemimemmem ~`
+  })
+
+  log(`User <@${message.user}> changed to Mem`)
+
+});
+
+app.message('nuke', async ({message, say}) => {
+  //nuke [url]
+  if (admins.includes(message.user)) {
+    threadUrl = message.text.split(" ")[1]
+    threadUrl = threadUrl.replace("https://", "")
+    threadUrlArray = threadUrl.split("/")
+    chan_id = threadUrlArray[2]
+    ts = threadUrlArray[3].replace("p","")
+    ts = ts.slice(0,10) + "." + ts.slice(10)
+    /* i dont need this ig???
+    thread_to_nuke = await app.client.conversations.history({
+      //https://api.slack.com/messaging/retrieving#individual_messages
+      token: process.env.SLACK_BOT_TOKEN,
+      channel: chan_id,
+      latest: ts,
+      inclusive: true,
+      limit: 1
+    });
+    */
+    thread_to_nuke = await app.client.conversations.replies({
+      token: process.env.SLACK_BOT_TOKEN,
+      ts: ts,
+      channel: chan_id
+    })
+    for (i = 0; i < thread_to_nuke.messages.length; i++) {
+      app.client.chat.delete({
+        token: process.env.SLACK_USER_TOKEN,
+        ts: thread_to_nuke.messages[i].ts,
+        channel: chan_id,
+        as_user: true
+      })
+    }
+    
+  } else {
+    await say({
+      username: name,
+      icon_emoji: pfp,
+      text: "You aren't allowed to do that!"
+    })
+    log(`<@${message.user} tried to delete a thread!!!! that's not allowed :(`)
+  }
+})
+
+app.message('paimon', async ({message, say}) => {
+  
+  name = "Paimon"
+  pfp = ":paimon:"
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `idk what to say i don't play genshin`
+  })
+
+  log(`User <@${message.user}> changed to Paimon`)
+
+});
+
+app.message('poll', async ({message, say}) => {
+  poll(message)
+  /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
+    username: "AI-chan",
+    icon_emoji: ":ai-chan:",
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: "C094K8W7DU4",
+    text: `` //add poll message id here
+  }) */
+});
+
+app.message('pull hsr', async ({message, say}) => {
+  //pull hsr *$times *$whichonewas5staror0ifnot $5050waslost?
+  //one pass costs 160 jade in hsr; half pity is 90, then id you lose your 50/50 you're guerranteed a win after another 90
+  pullArray = message.text.split(" ")
+  pullArray[2] = parseInt(pullArray[2])
+  pullArray[3] = parseInt(pullArray[3])
+  if (pullArray[3] == 0) {
+    //if did not get 5 star
+    data[message.user].hsr.pity = parseInt(data[message.user].hsr.pity) + parseInt(pullArray[2])
+    
+
+  } else {
+    //if get 5 star
+    pity = pullArray[3]
+    if (pullArray[4]) {
+      data[message.user].hsr.lost50_50 = true
+    } else {
+      data[message.user].hsr.lost50_50 = false
+    }
+  }
+  if (tickets >= pullArray[2]) {
+      //if tickets were used
+      data[message.user].hsr.tickets = parseInt(data[message.user].hsr.tickets) - parseInt(pullArray[2])
+    } else {
+      //if [tickets and] jade [was|were] used
+      jadeUsed = pullArray[2] - parseInt(data[message.user].hsr.tickets)
+      data[message.user].hsr.tickets = 0
+      data[message.user].hsr.jade = parseInt(data[message.user].hsr.jade) - jadeUsed*160
+    }
+  fs.writeFileSync('data.json', JSON.stringify(data), )
+});
+
+app.message('pulls left hsr', async ({message, say}) => {
+  uid = message.user
+  temp_data = data[uid].hsr
+  jades = parseInt(temp_data.jade)
+  starlights = parseInt(temp_data.starlight)
+  ticketss = parseInt(temp_data.tickets)
+  pityy = parseInt(temp_data.pity)
+  pulls_left = Math.floor(jades/160) + Math.floor(starlights/20) + Math.floor(ticketss)
+  pity_plus_pulls = Math.floor(jades/160) + Math.floor(starlights/20) + Math.floor(ticketss) + Math.floor(pityy)
+  say({
+    username: name,
+    icon_emoji: pfp,
+    text: `You have ${pulls_left} pulls if you use all of your resources! This would give you ${pity_plus_pulls} pity ~`
+  })
+})
+
+app.message('roll', async ({message, say}) => {
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: "Rolling die..."
+  })
+  //example message: "roll 1d4 + 3"
+  messageNoCmd = message.text.slice(5)
+  result = rollDie(messageNoCmd)
+  log(`User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`)
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `<@${message.user}>, You rolled a ${result}`
+  })
+});
+
+app.message('suggest', async ({message, say}) => {
+  await DmToDev(`user <@${message.user}> [${message.user}] sent \`${message.text}\` `)
+  await say({
+    username: name,
+    icon_emoji: pfp,
+    text: `<@${devUid}> has received your message!`
+  })
+})
+
+app.message('update', async ({message, say}) => {
+  //update/key/value 
+  updateArray = message.text.split("/")
+  say({
+    username: name,
+    icon_emoji: pfp,
+    text: `updating key ${updateArray[1]} to value ${updateArray[2]}`
+  })
+  data[message.user].hsr[updateArray[1]] = updateArray[2]
+  fs.writeFileSync('data.json', JSON.stringify(data), )
+});
 
 app.message('yell', async ({message, say}) => {
   say({
@@ -135,353 +375,7 @@ app.message('yap', async ({message, say}) => {
   }
 })
 
-// Listens to incoming messages that contain "log"
-app.message('log', async ({ message, say }) => {
-  
-  messageNoCmd = message.text.slice(4)
-  log(`User <@${message.user}> sent message: ${messageNoCmd}`)
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `Log seen <@${message.user}>!`
-  }
-  )
-  ;
-});
 
-app.message('roll', async ({message, say}) => {
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: "Rolling die..."
-  })
-  //example message: "roll 1d4 + 3"
-  messageNoCmd = message.text.slice(5)
-  result = rollDie(messageNoCmd)
-  log(`User <@${message.user}> rolled die: ${messageNoCmd}, and received a ${result}`)
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `<@${message.user}>, You rolled a ${result}`
-  })
-});
-
-app.message('hello', async ({say}) => {
-  say({
-    text: "hai!",
-    username: name,
-    icon_emoji: pfp,
-  })
-})
-
-app.message('suggest', async ({message, say}) => {
-  await DmToDev(`user <@${message.user}> [${message.user}] sent \`${message.text}\` `)
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `<@${devUid}> has received your message!`
-  })
-})
-
-app.message('annoy', async ({message, say}) => {
-
-  messageNoCmd = message.text.slice(6)
-  annoyedUID = messageNoCmd.slice(2,13)
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `You annoyed <@${annoyedUID}>!`
-  })
-  try {
-    annoyedDM =  app.client.conversations.open({
-      token: process.env.SLACK_BOT_TOKEN,
-      users: annoyedUID
-    })
-    app.client.chat.postMessage({
-      username: name,
-      icon_emoji: pfp,
-      token: process.env.SLACK_BOT_TOKEN,
-      channel: annoyedUID,
-      text: `<@${annoyedUID}>, somebody tried to annoy you!`
-    })
-    log(`<@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
-} catch (error) {
-    log(`${error} was logged while <@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
-  }
-  
-});
-/*
-app.message('', async ({message, say}) => {
-  profile = app.client.users.profile.get({
-    token: process.env.SLACK_BOT_TOKEN,
-    user: message.user
-  })
-  log(message.text + " - <@" + message.user + ">");
-
-} );*/
-
-app.message('nuke', async ({message, say}) => {
-  //nuke [url]
-  if (admins.includes(message.user)) {
-    threadUrl = message.text.split(" ")[1]
-    threadUrl = threadUrl.replace("https://", "")
-    threadUrlArray = threadUrl.split("/")
-    chan_id = threadUrlArray[2]
-    ts = threadUrlArray[3].replace("p","")
-    ts = ts.slice(0,10) + "." + ts.slice(10)
-    /* i dont need this ig???
-    thread_to_nuke = await app.client.conversations.history({
-      //https://api.slack.com/messaging/retrieving#individual_messages
-      token: process.env.SLACK_BOT_TOKEN,
-      channel: chan_id,
-      latest: ts,
-      inclusive: true,
-      limit: 1
-    });
-    */
-    thread_to_nuke = await app.client.conversations.replies({
-      token: process.env.SLACK_BOT_TOKEN,
-      ts: ts,
-      channel: chan_id
-    })
-    for (i = 0; i < thread_to_nuke.messages.length; i++) {
-      app.client.chat.delete({
-        token: process.env.SLACK_USER_TOKEN,
-        ts: thread_to_nuke.messages[i].ts,
-        channel: chan_id,
-        as_user: true
-      })
-    }
-    
-  } else {
-    await say({
-      username: name,
-      icon_emoji: pfp,
-      text: "You aren't allowed to do that!"
-    })
-    log(`<@${message.user} tried to delete a thread!!!! that's not allowed :(`)
-  }
-})
-
- 
-allUsers = JSON.parse(fs.readFileSync('user_data.json'))
-  for (i = 0; i < allUsers.members.length; i++) {
-    uid = allUsers.members[i].id 
-
-app.client.views.publish({
-  "user_id": uid,
-  "view": {
-
-	"type": "home",
-	"blocks": [
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Pick an item from the dropdown list"
-			},
-			"accessory": {
-				"type": "static_select",
-				"placeholder": {
-					"type": "plain_text",
-					"text": "Select who you want to see!",
-					"emoji": true
-				},
-				"options": [
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "*AI-chan*",
-							"emoji": true
-						},
-						"value": "value-0"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "*Mem*",
-							"emoji": true
-						},
-						"value": "value-1"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "*Paimon*",
-							"emoji": true
-						},
-						"value": "value-2"
-					}
-				],
-				"action_id": "switch_character"
-			}
-		},
-		{
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": ":mem: Update HSR data",
-						"emoji": true
-					},
-					"value": "update_hsr_data",
-					"action_id": "update_hsr_data"
-				}
-			]
-		},
-    {
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "Annoy somebody!",
-						"emoji": true
-					},
-					"value": "annoy_somebody",
-					"action_id": "annoy_somebody"
-				}
-			]
-		},
-		{
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "Create a Poll!",
-						"emoji": true
-					},
-					"value": "make_poll",
-					"action_id": "make_poll"
-				}
-			]
-		}
-	]
-}  })}
-
-/*
-app.action('button_click', async ({ body, ack, say }) => {
-  // Acknowledge the action
-  await ack();
-  await say(`<@${body.user.id}> clicked the button`);
-});
-*/
-
-//poll #channel question_with_multiple_words option option option_with_multiple_words
-/*
-blocks[3].options  where value == clicked .text > .split("| ") change the second one +1 or -1
-{
-	"blocks": [
-		{ "type": "section", "text": {"type": "plain_text", "text": "Poll Question", "emoji": true } }, # done
-		{"type": "section","text": {"type": "mrkdwn","text": "Poll Options"}, # done
-    "accessory": {"type": "checkboxes","options": [
-    {"text": {"type": "mrkdwn", "text": "*this is mrkdwn text*" }, "description": { "type": "mrkdwn", "text": "*this is mrkdwn text*"},"value": "value-0" },
-					{
-						"text": {
-							"type": "mrkdwn",
-							"text": "*this is mrkdwn text*"
-						},
-						"description": {
-							"type": "mrkdwn",
-							"text": "*this is mrkdwn text*"
-						},
-						"value": "value-1"
-					},
-					{
-						"text": {
-							"type": "mrkdwn",
-							"text": "*this is mrkdwn text*"
-						},
-						"description": {
-							"type": "mrkdwn",
-							"text": "*this is mrkdwn text*"
-						},
-						"value": "value-2"
-					}
-				],
-				"action_id": "checkboxes-action"
-			}
-		}
-	]
-}
-*/
-
-app.message('update', async ({message, say}) => {
-  //update/key/value 
-  updateArray = message.text.split("/")
-  say({
-    username: name,
-    icon_emoji: pfp,
-    text: `updating key ${updateArray[1]} to value ${updateArray[2]}`
-  })
-  data[message.user].hsr[updateArray[1]] = updateArray[2]
-  fs.writeFileSync('data.json', JSON.stringify(data), )
-});
-
-app.message('pull hsr', async ({message, say}) => {
-  //pull hsr *$times *$whichonewas5staror0ifnot $5050waslost?
-  //one pass costs 160 jade in hsr; half pity is 90, then id you lose your 50/50 you're guerranteed a win after another 90
-  pullArray = message.text.split(" ")
-  pullArray[2] = parseInt(pullArray[2])
-  pullArray[3] = parseInt(pullArray[3])
-  if (pullArray[3] == 0) {
-    //if did not get 5 star
-    data[message.user].hsr.pity = parseInt(data[message.user].hsr.pity) + parseInt(pullArray[2])
-    
-
-  } else {
-    //if get 5 star
-    pity = pullArray[3]
-    if (pullArray[4]) {
-      data[message.user].hsr.lost50_50 = true
-    } else {
-      data[message.user].hsr.lost50_50 = false
-    }
-  }
-  if (tickets >= pullArray[2]) {
-      //if tickets were used
-      data[message.user].hsr.tickets = parseInt(data[message.user].hsr.tickets) - parseInt(pullArray[2])
-    } else {
-      //if [tickets and] jade [was|were] used
-      jadeUsed = pullArray[2] - parseInt(data[message.user].hsr.tickets)
-      data[message.user].hsr.tickets = 0
-      data[message.user].hsr.jade = parseInt(data[message.user].hsr.jade) - jadeUsed*160
-    }
-  fs.writeFileSync('data.json', JSON.stringify(data), )
-});
-
-app.message('pulls left hsr', async ({message, say}) => {
-  uid = message.user
-  temp_data = data[uid].hsr
-  jades = parseInt(temp_data.jade)
-  starlights = parseInt(temp_data.starlight)
-  ticketss = parseInt(temp_data.tickets)
-  pityy = parseInt(temp_data.pity)
-  pulls_left = Math.floor(jades/160) + Math.floor(starlights/20) + Math.floor(ticketss)
-  pity_plus_pulls = Math.floor(jades/160) + Math.floor(starlights/20) + Math.floor(ticketss) + Math.floor(pityy)
-  say({
-    username: name,
-    icon_emoji: pfp,
-    text: `You have ${pulls_left} pulls if you use all of your resources! This would give you ${pity_plus_pulls} pity ~`
-  })
-})
-
-
-app.message('poll', async ({message, say}) => {
-  poll(message)
-  /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
-    username: "AI-chan",
-    icon_emoji: ":ai-chan:",
-    token: process.env.SLACK_BOT_TOKEN,
-    channel: "C094K8W7DU4",
-    text: `` //add poll message id here
-  }) */
-});
 
 function poll(message) {
   pollArray = message.text.split(" ")
@@ -519,13 +413,7 @@ function poll(message) {
   })
 };
 
-app.message('bye', async ({message, say}) => {
-  say({
-    username: name,
-    icon_emoji: pfp,
-    text: "o(*^▽^*)┛"
-  })
-});
+
 
 
 
@@ -608,111 +496,8 @@ function rollDie(die) {
   }
   return result
 }
-app.action('switch_character', async ({ body, ack }) => {
-  await ack();
-  log(JSON.stringify(body))
-  char = body.actions[0].selected_option.text.text
-  if (char == "*AI-chan*") {
-    name = "AI-chan"
-    pfp = ":ai-chan:"
-    log(`User <@${body.user.id}> changed to AI-chan`)
-  } else if (char == "*Paimon*") {
-    name = "Paimon"
-    pfp = ":paimon:"
-    log(`User <@${body.user.id}> changed to Paimon`)  
-  } else if (char == "*Mem*") {
-    name = "Mem"
-    pfp = ":mem:"
-    log(`User <@${body.user.id}> changed to Mem`)
-  }
-})
 
-app.message('mem', async ({message, say}) => {
-  
-  name = "Mem"
-  pfp = ":mem:"
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `Mem memmemmem... Memi memimem memmemmemimemmem ~`
-  })
-
-  log(`User <@${message.user}> changed to Mem`)
-
-});
-
-app.message('paimon', async ({message, say}) => {
-  
-  name = "Paimon"
-  pfp = ":paimon:"
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `idk what to say i don't play genshin`
-  })
-
-  log(`User <@${message.user}> changed to Paimon`)
-
-});
-
-app.message('ai-chan on', async ({message, say}) => {
-  
-  name = "AI-chan"
-  pfp = ":ai-chan:"
-  await say({
-    username: name,
-    icon_emoji: pfp,
-    text: `the correct mode`
-  })
-
-  log(`User <@${message.user}> changed to AI-chan`)
-
-});
-
-app.action('poll-checked', async ({ body, ack }) => {
-  await ack();
-  //log(JSON.stringify(body))
-  clicked = body.actions[0].selected_option.value
-  blocks = body.message.blocks
-  options = blocks[1].accessory.options
-  for (n = 0; n < options.length; n++) {
-    if (options[n].value == clicked) {
-      break;
-    }
-  }
-  /*
-  textToChange = options[n].text.text
-  textToChangeArray = textToChange.split("| ")
-  textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
-  blocks[1].accessory.options[n].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
-  */
-
-  poll_data[body.user.id][body.container.channel_id + body.container.message_ts] = n
-  fs.writeFileSync('poll_data.json', JSON.stringify(poll_data), )
-  for (x = 0; x < options.length; x++) {
-    //clear the poll
-      textToChange = options[x].text.text
-      textToChangeArray = textToChange.split("| ")
-      textToChangeArray[1] = 0
-      blocks[1].accessory.options[x].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
-    
-  }
-  for (x = 0; x < Object.keys(poll_data).length; x++) {
-    //get the persons poll data > get the poll > get which one is clicked > add 1
-    textToChange = options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text
-    textToChangeArray = textToChange.split("| ")
-    textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
-    blocks[1].accessory.options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
-  }
-  //log(blocks)
-  app.client.chat.update({
-    token: process.env.SLACK_BOT_TOKEN,
-    ts: body.message.ts,
-    channel: body.channel.id,
-    blocks: blocks //edit these blocks!
-  })
-  //log(body.toString())
-});
+//on modal submit (。・ω・。)
 
 app.view('hsr_data_modal', async ({body, ack}) => {
     log(JSON.stringify(body))
@@ -762,6 +547,270 @@ app.view('annoy_modal', async ({body, ack}) => {
   //log(`<@${message.user}> [${message.user}] tried to annoy <@${annoyedUID}> [${annoyedUID}]`)
   ack();
 });
+
+
+
+
+/* i'm giving up on this bc i don't feel like getting around the just a moment and cookies accepty thing
+function getAO3Data(url){
+  //hehehe
+  https.get(url, (res) => {
+    res.on('data', (d) => {
+    process.stdout.write(d);
+  });
+  })
+}
+
+getAO3Data(process.env.TEST_URL)
+*/
+
+//app.action('')
+
+
+//stuff copied from other stuff i made
+
+
+
+allUsers = JSON.parse(fs.readFileSync('user_data.json'))
+  for (i = 0; i < allUsers.members.length; i++) {
+    uid = allUsers.members[i].id 
+
+app.client.views.publish({
+  "user_id": uid,
+  "view": {
+
+  "type": "home",
+  "blocks": [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "Pick an item from the dropdown list"
+      },
+      "accessory": {
+        "type": "static_select",
+        "placeholder": {
+          "type": "plain_text",
+          "text": "Select who you want to see!",
+          "emoji": true
+        },
+        "options": [
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "*AI-chan*",
+              "emoji": true
+            },
+            "value": "value-0"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "*Mem*",
+              "emoji": true
+            },
+            "value": "value-1"
+          },
+          {
+            "text": {
+              "type": "plain_text",
+              "text": "*Paimon*",
+              "emoji": true
+            },
+            "value": "value-2"
+          }
+        ],
+        "action_id": "switch_character"
+      }
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": ":mem: Update HSR data",
+            "emoji": true
+          },
+          "value": "update_hsr_data",
+          "action_id": "update_hsr_data"
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Annoy somebody!",
+            "emoji": true
+          },
+          "value": "annoy_somebody",
+          "action_id": "annoy_somebody"
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Create a Poll!",
+            "emoji": true
+          },
+          "value": "make_poll",
+          "action_id": "make_poll"
+        }
+      ]
+    }
+  ]
+}  })}
+
+//app home buttons
+
+app.action('annoy_somebody', async ({ body, ack }) => {
+  result = await app.client.views.open({
+    trigger_id: body.trigger_id,
+    token: process.env.SLACK_BOT_TOKEN,
+    view: {
+      "callback_id": "annoy_modal",
+      "external_id": "annoy_modal",
+      "type": "modal",
+      "title": {
+          "type": "plain_text",
+          "text": "Annoy Somebody",
+          "emoji": true
+        },
+      "submit": {
+        "type": "plain_text",
+        "text": "Submit",
+        "emoji": true
+      },
+      "close": {
+        "type": "plain_text",
+        "text": "Cancel",
+        "emoji": true
+      },
+      "blocks": [
+        {
+          "block_id": "uid",
+          "type": "input",
+          "element": {
+            "type": "users_select",
+            "placeholder": {
+              "type": "plain_text",
+              "text": "Select users",
+              "emoji": true
+            },
+            "action_id": "uid"
+          },
+          "label": {
+            "type": "plain_text",
+            "text": "Label",
+            "emoji": true
+          }
+        }
+      ]
+    }
+  })
+});
+
+app.action('make_poll', async ({ body, ack }) => {
+  result = await app.client.views.open({
+    trigger_id: body.trigger_id,
+    token: process.env.SLACK_BOT_TOKEN,
+    view: {
+            "callback_id":"poll_modal",
+      "external_id": "poll_modal",
+
+	"type": "modal",
+	"title": {
+		"type": "plain_text",
+		"text": "Create Poll",
+		"emoji": true
+	},
+	"submit": {
+		"type": "plain_text",
+		"text": "Submit",
+		"emoji": true
+	},
+	"close": {
+		"type": "plain_text",
+		"text": "Cancel",
+		"emoji": true
+	},
+	"blocks": [
+		{
+      "block_id": "q",
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "response"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Question",
+				"emoji": true
+			}
+		},
+    {
+      "block_id": "chan",
+    "type": "input",
+    "label": {
+      "type": "plain_text",
+      "text": "Channel"
+    },
+    "element": {
+      "action_id": "response",
+      "type": "conversations_select",
+      "placeholder": {
+        "type": "plain_text",
+        "text": "Select a channel"
+      }
+    }
+  },
+		{
+      "block_id": "a",
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true,
+				"action_id": "response"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Options",
+				"emoji": true
+			}
+		}
+	]
+}
+  })
+})
+
+app.action('switch_character', async ({ body, ack }) => {
+  await ack();
+  log(JSON.stringify(body))
+  char = body.actions[0].selected_option.text.text
+  if (char == "*AI-chan*") {
+    name = "AI-chan"
+    pfp = ":ai-chan:"
+    log(`User <@${body.user.id}> changed to AI-chan`)
+  } else if (char == "*Paimon*") {
+    name = "Paimon"
+    pfp = ":paimon:"
+    log(`User <@${body.user.id}> changed to Paimon`)  
+  } else if (char == "*Mem*") {
+    name = "Mem"
+    pfp = ":mem:"
+    log(`User <@${body.user.id}> changed to Mem`)
+  }
+})
 
 app.action('update_hsr_data', async ({ body, ack }) => {
   
@@ -919,151 +968,57 @@ app.action('update_hsr_data', async ({ body, ack }) => {
   log(JSON.stringify(result))
 });
 
-app.action('annoy_somebody', async ({ body, ack }) => {
-  result = await app.client.views.open({
-    trigger_id: body.trigger_id,
-    token: process.env.SLACK_BOT_TOKEN,
-    view: {
-      "callback_id": "annoy_modal",
-      "external_id": "annoy_modal",
-      "type": "modal",
-      "title": {
-          "type": "plain_text",
-          "text": "Annoy Somebody",
-          "emoji": true
-        },
-      "submit": {
-        "type": "plain_text",
-        "text": "Submit",
-        "emoji": true
-      },
-      "close": {
-        "type": "plain_text",
-        "text": "Cancel",
-        "emoji": true
-      },
-      "blocks": [
-        {
-          "block_id": "uid",
-          "type": "input",
-          "element": {
-            "type": "users_select",
-            "placeholder": {
-              "type": "plain_text",
-              "text": "Select users",
-              "emoji": true
-            },
-            "action_id": "uid"
-          },
-          "label": {
-            "type": "plain_text",
-            "text": "Label",
-            "emoji": true
-          }
-        }
-      ]
+//other interaction
+
+app.action('poll-checked', async ({ body, ack }) => {
+  await ack();
+  //log(JSON.stringify(body))
+  clicked = body.actions[0].selected_option.value
+  blocks = body.message.blocks
+  options = blocks[1].accessory.options
+  for (n = 0; n < options.length; n++) {
+    if (options[n].value == clicked) {
+      break;
     }
+  }
+  /*
+  textToChange = options[n].text.text
+  textToChangeArray = textToChange.split("| ")
+  textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
+  blocks[1].accessory.options[n].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+  */
+
+  poll_data[body.user.id][body.container.channel_id + body.container.message_ts] = n
+  fs.writeFileSync('poll_data.json', JSON.stringify(poll_data), )
+  for (x = 0; x < options.length; x++) {
+    //clear the poll
+      textToChange = options[x].text.text
+      textToChangeArray = textToChange.split("| ")
+      textToChangeArray[1] = 0
+      blocks[1].accessory.options[x].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+    
+  }
+  for (x = 0; x < Object.keys(poll_data).length; x++) {
+    //get the persons poll data > get the poll > get which one is clicked > add 1
+    textToChange = options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text
+    textToChangeArray = textToChange.split("| ")
+    textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
+    blocks[1].accessory.options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+  }
+  //log(blocks)
+  app.client.chat.update({
+    token: process.env.SLACK_BOT_TOKEN,
+    ts: body.message.ts,
+    channel: body.channel.id,
+    blocks: blocks //edit these blocks!
   })
+  //log(body.toString())
 });
 
-app.action('make_poll', async ({ body, ack }) => {
-  result = await app.client.views.open({
-    trigger_id: body.trigger_id,
-    token: process.env.SLACK_BOT_TOKEN,
-    view: {
-            "callback_id":"poll_modal",
-      "external_id": "poll_modal",
-
-	"type": "modal",
-	"title": {
-		"type": "plain_text",
-		"text": "Create Poll",
-		"emoji": true
-	},
-	"submit": {
-		"type": "plain_text",
-		"text": "Submit",
-		"emoji": true
-	},
-	"close": {
-		"type": "plain_text",
-		"text": "Cancel",
-		"emoji": true
-	},
-	"blocks": [
-		{
-      "block_id": "q",
-			"type": "input",
-			"element": {
-				"type": "plain_text_input",
-				"action_id": "response"
-			},
-			"label": {
-				"type": "plain_text",
-				"text": "Question",
-				"emoji": true
-			}
-		},
-    {
-      "block_id": "chan",
-    "type": "input",
-    "label": {
-      "type": "plain_text",
-      "text": "Channel"
-    },
-    "element": {
-      "action_id": "response",
-      "type": "conversations_select",
-      "placeholder": {
-        "type": "plain_text",
-        "text": "Select a channel"
-      }
-    }
-  },
-		{
-      "block_id": "a",
-			"type": "input",
-			"element": {
-				"type": "plain_text_input",
-				"multiline": true,
-				"action_id": "response"
-			},
-			"label": {
-				"type": "plain_text",
-				"text": "Options",
-				"emoji": true
-			}
-		}
-	]
-}
-  })
-})
-
-/* i'm giving up on this bc i don't feel like getting around the just a moment and cookies accepty thing
-function getAO3Data(url){
-  //hehehe
-  https.get(url, (res) => {
-    res.on('data', (d) => {
-    process.stdout.write(d);
-  });
-  })
-}
-
-getAO3Data(process.env.TEST_URL)
-*/
-
-//app.action('')
-
-
-//stuff copied from other stuff i made
+//just useful stuff
 
 function rand(max, min = 0) {
   max = parseInt(max)
     //max will never be returned (i should have noticed this)
     return Math.floor(Math.random() * (max - min) + min)
-}
-
-//IT'S TIME TO GO INSANE WITH GACHA GAMES !!!
-function calculatePulls(data /*tickets, jade, starlight, ~~embers, usedEmbers,~~ [who cares abt embers] pity, lost50_50, chara|lcs, ~~rateUp~~ [global] */ ) {
-
 }
