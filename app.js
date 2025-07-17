@@ -2,8 +2,8 @@ const { App } = require('@slack/bolt');
 const process = require('node:process');
 const https = require('node:https');
 const fs = require('node:fs');
-let data = JSON.parse(fs.readFileSync('data.json'))
-let poll_data = JSON.parse(fs.readFileSync('poll_data.json'))
+let data = JSON.parse(fs.readFileSync(process.env.data_file))
+let poll_data = JSON.parse(fs.readFileSync(process.env.poll_data_file))
 const devChannelId = process.env.devChannelId
 const devDmId = process.env.devDmId
 const devUid = process.env.devUid
@@ -31,7 +31,7 @@ const app = new App({
 });
 /*
 allUsers = await app.client.users.list({token:process.env.SLACK_BOT_TOKEN})
-fs.writeFileSync('user_data.json', JSON.stringify(allUsers), )
+fs.writeFileSync(process.env.user_data_file, JSON.stringify(allUsers), )
 */
 /* 
 blocks: [
@@ -109,7 +109,7 @@ app.message('bye', async ({message, say}) => {
 
 app.message('get users', async ({}) => {
   allUsers = await app.client.users.list({token:process.env.SLACK_BOT_TOKEN})
-  fs.writeFileSync('user_data.json', JSON.stringify(allUsers), )
+  fs.writeFileSync(process.env.user_data_file, JSON.stringify(allUsers), )
 
 })
 
@@ -256,7 +256,7 @@ app.message('pull hsr', async ({message, say}) => {
       data[message.user].hsr.tickets = 0
       data[message.user].hsr.jade = parseInt(data[message.user].hsr.jade) - jadeUsed*160
     }
-  fs.writeFileSync('data.json', JSON.stringify(data), )
+  fs.writeFileSync(process.env.data_file, JSON.stringify(data), )
 });
 
 app.message('pulls left hsr', async ({message, say}) => {
@@ -310,7 +310,7 @@ app.message('update', async ({message, say}) => {
     text: `updating key ${updateArray[1]} to value ${updateArray[2]}`
   })
   data[message.user].hsr[updateArray[1]] = updateArray[2]
-  fs.writeFileSync('data.json', JSON.stringify(data), )
+  fs.writeFileSync(process.env.data_file, JSON.stringify(data), )
 });
 
 app.message('yell', async ({message, say}) => {
@@ -319,7 +319,7 @@ app.message('yell', async ({message, say}) => {
     icon_emoji: pfp,
     text:"okidoki"})
   //broadcast message
-  allUsers = JSON.parse(fs.readFileSync('user_data.json'))
+  allUsers = JSON.parse(fs.readFileSync(process.env.user_data_file))
   log(allUsers.members.length)
   for (i = 0; i < allUsers.members.length; i++) {
     uid = allUsers.members[i].id 
@@ -558,7 +558,7 @@ app.view('hsr_data_modal', async ({body, ack}) => {
   } else {
     data[body.user.id].hsr.lost50_50 = false
   }
-  fs.writeFileSync('data.json', JSON.stringify(data), )
+  fs.writeFileSync(process.env.data_file, JSON.stringify(data), )
 })
 
 app.view('poll_modal', async ({body, ack}) => {
@@ -617,7 +617,7 @@ getAO3Data(process.env.TEST_URL)
 
 
 
-allUsers = JSON.parse(fs.readFileSync('user_data.json'))
+allUsers = JSON.parse(fs.readFileSync(process.env.user_data_file))
   for (i = 0; i < allUsers.members.length; i++) {
     uid = allUsers.members[i].id 
 
@@ -1035,7 +1035,7 @@ app.action('poll-checked', async ({ body, ack }) => {
   */
 
   poll_data[body.user.id][body.container.channel_id + body.container.message_ts] = n
-  fs.writeFileSync('poll_data.json', JSON.stringify(poll_data), )
+  fs.writeFileSync(process.env.poll_data_file, JSON.stringify(poll_data), )
   for (x = 0; x < options.length; x++) {
     //clear the poll
       textToChange = options[x].text.text
@@ -1090,7 +1090,7 @@ app.action('multi-poll-checked', async ({ body, ack }) => {
 
   //poll_data[body.user.id][body.container.channel_id + body.container.message_ts] = n
 
-  fs.writeFileSync('poll_data.json', JSON.stringify(poll_data), )
+  fs.writeFileSync(process.env.poll_data_file, JSON.stringify(poll_data), )
   for (x = 0; x < options.length; x++) {
     //clear the poll
       textToChange = options[x].text.text
