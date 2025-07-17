@@ -472,6 +472,7 @@ function multipoll(message) {
 
 process.on('SIGINT', (code) => {
   log(`(っ °Д °;)っ AI-chan stopped (;´༎ຶД༎ຶ\`)`)
+  process.exit(); 
 })
 
 // https://stackoverflow.com/a/51454798
