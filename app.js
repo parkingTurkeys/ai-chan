@@ -437,7 +437,7 @@ function multipoll(message) {
     options[i] = options[i].replaceAll("_", " ")
   }
   var blocks = `[{ "type": "section","text": {"type": "mrkdwn", "text": "${question}"} },		{"type": "section","block_id": "multipoll" ,"text": {"type": "mrkdwn","text": "Poll Options"},`
-  blocks += `"accessory": {"type": "checkboxes","initial_options":[], "options": [` 
+  blocks += `"accessory": {"type": "checkboxes","options": [` 
   for (i = 0; i < options.length - 1;) {
     blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "value_${i}" },`
     i++
