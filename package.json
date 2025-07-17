@@ -4,8 +4,10 @@
   "description": "AI-chan",
   "main": "app.js",
   "scripts": {
-    "start": "node --env-file=.env app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run start-test & npm run start-nightcord",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start-test": "node --env-file=.env-test app.js",
+    "start-nightcord": "node --env-file=.env app.js"
   },
   "license": "MIT",
   "dependencies": {

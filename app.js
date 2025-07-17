@@ -161,7 +161,7 @@ app.message('multipoll', async ({message, say}) => {
 
 app.message('nuke', async ({message, say}) => {
   //nuke [url]
-  if (admins.includes(message.user)) {
+  if (/*admins.includes(message.user )*/true) {
     threadUrl = message.text.split(" ")[1]
     threadUrl = threadUrl.replace("https://", "")
     threadUrlArray = threadUrl.split("/")
