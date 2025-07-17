@@ -148,6 +148,17 @@ app.message('mem', async ({message, say}) => {
 
 });
 
+app.message('multipoll', async ({message, say}) => {
+  multipoll(message)
+  /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
+    username: "AI-chan",
+    icon_emoji: ":ai-chan:",
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: "C094K8W7DU4",
+    text: `` //add poll message id here
+  }) */
+});
+
 app.message('nuke', async ({message, say}) => {
   //nuke [url]
   if (admins.includes(message.user)) {
@@ -206,7 +217,7 @@ app.message('paimon', async ({message, say}) => {
 });
 
 app.message('poll', async ({message, say}) => {
-  poll(message)
+  if (!message.text.includes("multipoll")){poll(message)}
   /* i'm stupid i don't need this :) app.client.chat.postMessage({ //this goes last
     username: "AI-chan",
     icon_emoji: ":ai-chan:",
@@ -378,10 +389,10 @@ app.message('yap', async ({message, say}) => {
 
 
 function poll(message) {
-  pollArray = message.text.split(" ")
+  var pollArray = message.text.split(" ")
   //poll <#chan_id> question option option_with_multiple words...
   //pollArray: 0 = "poll", 1 = <#channelid|>, 2 = question, 3..length = option[_with_multiple_words]
-  regexy = new RegExp("[<#>]", "g")
+  var regexy = new RegExp("[<#>]", "g")
   channelId = pollArray[1].replaceAll(regexy, "")
   channelId = channelId.split("|")[0]
   question = pollArray[2].replaceAll("_", " ")
@@ -413,6 +424,41 @@ function poll(message) {
   })
 };
 
+function multipoll(message) {
+  var pollArray = message.text.split(" ")
+  //multipoll <#chan_id> question option option_with_multiple words...
+  //pollArray: 0 = "poll", 1 = <#channelid|>, 2 = question, 3..length = option[_with_multiple_words]
+  var regexy = new RegExp("[<#>]", "g")
+  var channelId = pollArray[1].replaceAll(regexy, "")
+  channelId = channelId.split("|")[0]
+  var question = pollArray[2].replaceAll("_", " ")
+  var options = pollArray.splice(3)
+  for (i = 0; i < options.length; i++) {
+    options[i] = options[i].replaceAll("_", " ")
+  }
+  var blocks = `[{ "type": "section","text": {"type": "mrkdwn", "text": "${question}"} },		{"type": "section","block_id": "multipoll" ,"text": {"type": "mrkdwn","text": "Poll Options"},`
+  blocks += `"accessory": {"type": "checkboxes","initial_options":[], "options": [` 
+  for (i = 0; i < options.length - 1;) {
+    blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "value_${i}" },`
+    i++
+  }
+  blocks += `{"text": {"type": "mrkdwn", "text": "${options[i]} | 0" },"value": "value_${i}" }`
+  blocks += `],
+				"action_id": "multi-poll-checked"
+			}
+
+}]`
+  log(blocks)
+  blocks = JSON.parse(blocks)
+  app.client.chat.postMessage({
+    username: name,
+    icon_emoji: pfp,
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: channelId,
+    text: `poll with question ${question}`,
+    blocks: blocks 
+  })
+};
 
 
 
@@ -1004,6 +1050,79 @@ app.action('poll-checked', async ({ body, ack }) => {
     textToChangeArray = textToChange.split("| ")
     textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
     blocks[1].accessory.options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+  }
+  //log(blocks)
+  app.client.chat.update({
+    token: process.env.SLACK_BOT_TOKEN,
+    ts: body.message.ts,
+    channel: body.channel.id,
+    blocks: blocks //edit these blocks!
+  })
+  //log(body.toString())
+});
+
+app.action('multi-poll-checked', async ({ body, ack }) => {
+  await ack();
+  log(JSON.stringify(body))
+  var clicked = body.state.values.multipoll["multi-poll-checked"].selected_options
+  var clicked_neat = []
+  var blocks = body.message.blocks
+  var options = blocks[1].accessory.options
+  blocks[1].accessory.initial_options = []
+  for (n = 0; n < clicked.length; n++) {
+    clicked_neat[n] = parseInt(clicked[n].value.replace("value_", ""))
+    
+  }
+  poll_data[body.user.id][body.container.channel_id + body.container.message_ts] = clicked_neat
+  /*
+  var options = blocks[1].accessory.options
+  for (n = 0; n < options.length; n++) {
+    if (options[n].value == clicked) {
+      break;
+    }
+  }
+  /*
+  textToChange = options[n].text.text
+  textToChangeArray = textToChange.split("| ")
+  textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
+  blocks[1].accessory.options[n].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+  */
+
+  //poll_data[body.user.id][body.container.channel_id + body.container.message_ts] = n
+
+  fs.writeFileSync('poll_data.json', JSON.stringify(poll_data), )
+  for (x = 0; x < options.length; x++) {
+    //clear the poll
+      textToChange = options[x].text.text
+      textToChangeArray = textToChange.split("| ")
+      textToChangeArray[1] = 0
+      blocks[1].accessory.options[x].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+    
+  }
+  var poll_data_person
+  for (x = 0; x < Object.keys(poll_data).length; x++) {
+    //~~get the persons poll data > get the poll > get which one is clicked > add 1~~
+    
+    /*
+    textToChange = options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text
+    textToChangeArray = textToChange.split("| ")
+    textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
+    blocks[1].accessory.options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+    */
+    poll_data_person = poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts]
+    //poll data : [0, 2] etc.
+    //get the persons poll data > get poll > get which is clicked > repeat for length > add 1 ig ?
+    for (n = 0; n < poll_data_person.length; n++) {
+      textToChange = options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts][n]].text.text
+      textToChangeArray = textToChange.split("| ")
+      textToChangeArray[1] = parseInt(textToChangeArray[1]) + 1
+      blocks[1].accessory.options[poll_data[Object.keys(poll_data)[x]][body.container.channel_id + body.container.message_ts][n]].text.text = textToChangeArray[0] + "| " + textToChangeArray[1]
+    }
+  }
+  for (n = 0; n < clicked.length; n++) {
+    //blocks[1].accessory.options[parseInt(clicked[n].value.replace("value_", ""))]
+    blocks[1].accessory.initial_options[n] = blocks[1].accessory.options[parseInt(clicked[n].value.replace("value_", ""))]
+    console.log(blocks[1].accessory.options[parseInt(clicked[n].value.replace("value_", ""))])
   }
   //log(blocks)
   app.client.chat.update({
